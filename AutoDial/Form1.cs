@@ -585,7 +585,7 @@ namespace AutoDial
                 number = numberOverride;
             }
 
-
+            // Location of the program (talk) used to dial the found number.
             string programFileLocation = System.Configuration.ConfigurationManager.AppSettings["programFileLocation"];
             if (programFileLocation != null)
             {
