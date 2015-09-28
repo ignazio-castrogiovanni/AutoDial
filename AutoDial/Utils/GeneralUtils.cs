@@ -15,7 +15,7 @@ namespace AutoDial
         private Logger m_logger;
         private LogAndErrorsUtils m_logAndErr;
 
-        GeneralUtils(LogAndErrorsUtils logAndErr)
+        public GeneralUtils(LogAndErrorsUtils logAndErr)
         {
             m_logAndErr = logAndErr;
             m_logger = logAndErr.getLogger();

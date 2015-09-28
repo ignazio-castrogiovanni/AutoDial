@@ -716,7 +716,7 @@ namespace AutoDial
             {
                 if (cleanupFolderConfig == "true")
                 {
-                     //Remove files
+                     // Remove files from main directory
                     string[] files = System.IO.Directory.GetFiles(@"C:\AutoDial");
 
                     foreach (string file in files)
@@ -724,6 +724,15 @@ namespace AutoDial
                         System.IO.File.Delete(file);
                     }
 
+                    // Remove picture files
+                    files = System.IO.Directory.GetFiles(@"C:\AutoDial\Images");
+
+                    foreach (string file in files)
+                    {
+                        System.IO.File.Delete(file);
+                    }
+
+                    // Remove log files
                     files = System.IO.Directory.GetFiles(@"C:\AutoDial\log");
 
                     foreach (string file in files)

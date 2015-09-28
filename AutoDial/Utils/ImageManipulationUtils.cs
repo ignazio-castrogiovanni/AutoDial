@@ -19,6 +19,7 @@ namespace AutoDial
         public ImageManipulationUtils(LogAndErrorsUtils logAndErrors, bool m_bSaveImage = true)
         {
             m_logger = logAndErrors.getLogger();
+            m_genUtils = new GeneralUtils(logAndErrors);
         }
 
         public void saveGrayScaleImg(ref Bitmap imgToConvert, string dateImage)
