@@ -15,6 +15,7 @@ using System.Windows.Forms;
 using Tesseract;
 using Tesseract.ConsoleDemo;
 using System.Configuration;
+using System.IO;
 
 namespace AutoDial
 {
@@ -23,6 +24,10 @@ namespace AutoDial
         private static Logger m_logger;
         private LogAndErrorsUtils m_logAndErr;
         private ImageManipulationUtils m_imgManUtils;
+        private Timer timer = new Timer();
+
+        private string m_strSound;
+
         /// <summary>
         /// Keep track if we have sent an error popup notification, if so use this value to supress future popups, under the assumption that the first one is the most important and probably the originator of the future popups.
         /// </summary>
@@ -33,6 +38,7 @@ namespace AutoDial
             m_logAndErr = new LogAndErrorsUtils(AutoDialIcon, ToolTipIcon.Error);
             m_imgManUtils = new ImageManipulationUtils(m_logAndErr);
             m_logger = m_logAndErr.getLogger();
+            
            
             //Initialise the Form
             InitializeComponent();
@@ -71,6 +77,31 @@ namespace AutoDial
                 string phoneNumber = this.extractPhoneNumber(rawText);
                 phoneNumber = this.cleanNumber(phoneNumber);
                 this.callNumber(phoneNumber);
+
+                // Get sounds info from config file
+                string strSoundFilename = System.Configuration.ConfigurationManager.AppSettings["alertSound"];
+                if (strSoundFilename != "" && File.Exists(strSoundFilename))
+                {
+                    m_logger.Debug("Sound file find in config: " + strSoundFilename);
+                    m_strSound = strSoundFilename;
+                    this.playSound(strSoundFilename);
+
+                    string strSoundDelay = System.Configuration.ConfigurationManager.AppSettings["alertDelay"];
+                    
+                    // Retrieve the delay
+                    int delayTimer;
+                    bool bIsNumeric = int.TryParse(strSoundDelay, out delayTimer);
+                    if (bIsNumeric)
+                    {
+                        timer.Interval = delayTimer;
+                        timer.Tick += new EventHandler(timerTick);
+                        timer.Start();
+                    }
+                }
+                else
+                {
+                    m_logger.Debug("No sound file found in either config or path - alertSound = " + strSoundFilename);
+                }
             }
             else
             {
@@ -78,6 +109,12 @@ namespace AutoDial
                 this.errorPopup("Target process not found in config", "Target process not found in config, please check configuration file.");
             }
 
+        }
+
+        private void timerTick(object sender, EventArgs e)
+        {
+            timer.Stop();
+            this.playSound(m_strSound);
         }
 
         #region Hotkeys
@@ -301,6 +338,8 @@ namespace AutoDial
             var rect = new User32.Rect();
             User32.GetWindowRect(process.MainWindowHandle, ref rect);
 
+            m_logger.Debug("Main window size: " + (rect.right - rect.left) + "x" + (rect.bottom - rect.top));
+
             int width = rect.right - rect.left;
             int height = rect.bottom - rect.top;
 
@@ -334,6 +373,7 @@ namespace AutoDial
 
             m_logger.Debug("Saving image: " + this.generateNameInitial(dateStamp));
 
+            // TO Change to a meaningful options.
             if (true)
             {
                 bmpScreenshot.Save("" + this.generateNameInitial(dateStamp), System.Drawing.Imaging.ImageFormat.Png);
@@ -491,7 +531,7 @@ namespace AutoDial
 
         #endregion
 
-        #region Input Handeling
+        #region Input Handling
 
         private void executeProgramToolStripMenuItem_Click(object sender, EventArgs e)
         {
@@ -632,6 +672,12 @@ namespace AutoDial
         }
 
 
+        public void playSound(string filename)
+        {
+            System.Media.SoundPlayer player = new System.Media.SoundPlayer(filename);
+            player.Play();
+        }
+
         public void bringToFront()
         {
 
@@ -678,7 +724,14 @@ namespace AutoDial
 
         public string generateNameInitial(string dateStamp)
         {
-            return @"C:\AutoDial\Images\image_" + dateStamp + ".png";
+            string strImagePath = @"C:\AutoDial\Images";
+
+            string strPathInitial = strImagePath + @"\image_" + dateStamp + ".png";
+            
+            // Create the Image folder if it doesn't exist.
+            (new FileInfo(strPathInitial)).Directory.Create();
+
+            return strPathInitial;
         }
 
         public string generateNameGrey(string dateStamp)
