@@ -24,6 +24,8 @@ namespace AutoDial
         private static Logger m_logger;
         private LogAndErrorsUtils m_logAndErr;
         private ImageManipulationUtils m_imgManUtils;
+        
+        // Timer used to play sound after a config timeout.
         private Timer timer = new Timer();
 
         private string m_strSound;
@@ -46,9 +48,9 @@ namespace AutoDial
             m_logger.Info("###################################################################");
             m_logger.Info("Starting Program");
 
-            this.registerHotkey();
+            registerHotkey();
 
-            this.customHide();
+            customHide();
         }
 
         /// <summary>
@@ -317,7 +319,7 @@ namespace AutoDial
             {
                 m_logger.Error("Target process not found: " + processName + Environment.NewLine + "Please check that the program is running, if so then check that the configured processName is correct");
 
-                this.errorPopup("Error", "Target process not found: " + processName + Environment.NewLine + "Please check that the program is running, if so then check that the configured processName is correct");
+                errorPopup("Error", "Target process not found: " + processName + Environment.NewLine + "Please check that the program is running, if so then check that the configured processName is correct");
                 return null;
             }
             else
@@ -447,7 +449,7 @@ namespace AutoDial
             else
             {
                 m_logger.Error("ScanImage unable to locate file: " + imagePath);
-                this.errorPopup("File Not Found", "ScanImage unable to locate file: " + imagePath);
+                errorPopup("File Not Found", "ScanImage unable to locate file: " + imagePath);
                 
                 return null;
             }
@@ -483,14 +485,14 @@ namespace AutoDial
                 else
                 {
                     m_logger.Error("Unable to find Match");
-                    this.errorPopup("Cant find AUTODIAL", "extractPhoneNumber() was unable to find AUTODIAL value");
+                    errorPopup("Cant find AUTODIAL", "extractPhoneNumber() was unable to find AUTODIAL value");
                     return null;
                 }
             }
             else
             {
                 m_logger.Error("extractPhoneNumber() inputText is NULL");
-                this.errorPopup("Null input", "extractPhoneNumber() inputText is NULL");
+                errorPopup("Null input", "extractPhoneNumber() inputText is NULL");
                 return null;
             }
         }
