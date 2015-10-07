@@ -13,7 +13,6 @@ namespace AutoDial
     class ImageManipulationUtils
     {
         private Logger m_logger;
-        private LogAndErrorsUtils m_logAndErrors;
         private GeneralUtils m_genUtils;
 
         public ImageManipulationUtils(LogAndErrorsUtils logAndErrors, bool m_bSaveImage = true)
@@ -29,7 +28,7 @@ namespace AutoDial
            // if (System.IO.File.Exists(strImgFileName))
            // {
            //     Bitmap imgToConvert = (Bitmap)Image.FromFile(strImgFileName);
-                Bitmap imgBlackAndWhite = convertToGrayScale(imgToConvert);
+                Bitmap imgBlackAndWhite = convertToBlackAndWhite(imgToConvert);
 
                 string strBlackAndWhiteFilename = m_genUtils.generateImgBlackAndWhiteFilename(dateImage);
                 m_logger.Debug("Saving image: " + strBlackAndWhiteFilename);
@@ -44,7 +43,7 @@ namespace AutoDial
            // }
         }
 
-        private Bitmap convertToGrayScale(Bitmap Bmp)
+        private Bitmap convertToBlackAndWhite(Bitmap Bmp)
         {
 
             m_logger.Debug("Start: GrayScale()");
@@ -70,7 +69,10 @@ namespace AutoDial
                 {
                     c = Bmp.GetPixel(x + startX, y + startY);
                     rgb = (int)(c.R * 0.21 + c.G * 0.72 + c.B * 0.07);
-                    OutputImage.SetPixel(x, y, Color.FromArgb(rgb, rgb, rgb));
+                    System.Drawing.Color colourBlackOrWhite = (rgb <= 127) ? Color.Black : Color.White;
+
+                    OutputImage.SetPixel(x, y, colourBlackOrWhite);
+                    //OutputImage.SetPixel(x, y, Color.FromArgb(rgb, rgb, rgb));
                 }
             return OutputImage;
         }

@@ -17,10 +17,15 @@ using Tesseract.ConsoleDemo;
 using System.Configuration;
 using System.IO;
 
+
+
 namespace AutoDial
 {
     public partial class Form1 : Form
     {
+        // It's not ideal but it's better to be hardcoded than to be in the config file as user can modify it and create problems.
+        const string TESSERACT_DATA_PATH = "C:\\Autodial\\Dialing\\AutoDial_0.14\\tessdata";
+
         private static Logger m_logger;
         private LogAndErrorsUtils m_logAndErr;
         private ImageManipulationUtils m_imgManUtils;
@@ -69,6 +74,7 @@ namespace AutoDial
 
                 if (capturedImg == null)
                 {
+                    m_logger.Debug("Image not captured.");
                     m_logAndErr.setFirstErrorSignalled(false);
                     return;
                 }
@@ -375,8 +381,10 @@ namespace AutoDial
 
             m_logger.Debug("Saving image: " + this.generateNameInitial(dateStamp));
 
-            // TO Change to a meaningful options.
-            if (true)
+            // Get the cleanUp value from the config.
+            string strCleanUpValue = System.Configuration.ConfigurationManager.AppSettings["cleanupFolder"];
+
+            if (strCleanUpValue != "true")
             {
                 bmpScreenshot.Save("" + this.generateNameInitial(dateStamp), System.Drawing.Imaging.ImageFormat.Png);
             }
@@ -404,8 +412,8 @@ namespace AutoDial
             
             if (System.IO.File.Exists(imagePath))
             {
-                // tesseract data path
-                string strTesseractDataPath = "C:\\Autodial\\Dialing\\AutoDial_0.14\\tessdata";
+                // Tesseract data path 
+               
 
                 try
                 {
@@ -413,10 +421,10 @@ namespace AutoDial
                     var resultPrinter = new ResultPrinter(logger2);
 
                     
-                   using (var engine = new TesseractEngine(@strTesseractDataPath, "eng", EngineMode.Default))
+                   using (var engine = new TesseractEngine(@TESSERACT_DATA_PATH, "eng", EngineMode.Default))
                     {
                         
-                        m_logger.Trace("Tesseract found in {0}", strTesseractDataPath);
+                        m_logger.Trace("Tesseract found in {0}", TESSERACT_DATA_PATH);
 
                         using (var img = Pix.LoadFromFile(imagePath))
                         {
@@ -438,7 +446,7 @@ namespace AutoDial
                 }
                 catch (Exception e)
                 {
-                    m_logger.Trace("Couldn't find the tesseract data on {0}", strTesseractDataPath);
+                    m_logger.Trace("Couldn't find the tesseract data on {0}", TESSERACT_DATA_PATH);
                     Trace.TraceError(e.ToString());
                     Console.WriteLine("Unexpected Error: " + e.Message);
                     Console.WriteLine("Details: ");
