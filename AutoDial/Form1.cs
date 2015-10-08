@@ -63,7 +63,11 @@ namespace AutoDial
         /// </summary>
         private void ExecuteProgram()
         {
+            m_logger.Info("###################################################################");
             m_logger.Info("Start: ExecuteProgram()");
+            
+            m_logAndErr.setFirstErrorSignalled(false);
+            m_logger.Debug("First error signal set to false");
 
             string strTargetProcessName = System.Configuration.ConfigurationManager.AppSettings["targetProcessName"];
             if (strTargetProcessName != null)
@@ -75,15 +79,16 @@ namespace AutoDial
                 if (capturedImg == null)
                 {
                     m_logger.Debug("Image not captured.");
-                    m_logAndErr.setFirstErrorSignalled(false);
                     return;
                 }
-                
-                m_imgManUtils.saveGrayScaleImg(ref capturedImg, dateStamp);
+                m_logger.Debug("Image captured");
+
+                m_imgManUtils.saveBlackAndWhiteImg(ref capturedImg, dateStamp);
+                m_logger.Debug("Image converted to Black and White");
                 
                 string rawText = ScanImage(dateStamp);
                 string phoneNumber = extractPhoneNumber(rawText);
-                phoneNumber = cleanNumber(phoneNumber);
+                
                 callNumber(phoneNumber);
 
                 // Get sounds info from config file
@@ -480,15 +485,12 @@ namespace AutoDial
                 if (result.Success)
                 {
                     m_logger.Debug("Found match:" + result.Value);
-
-                    //string value = result.Value;
-                    return cleanNumber(result.Value);
+                    return result.Value;
                 }
                 else if (resultZ.Success)
                 {
                     m_logger.Debug("Found(Z) match:" + resultZ.Value);
-
-                    return cleanNumber(resultZ.Value);
+                    return resultZ.Value;
                 }
                 else
                 {
@@ -503,40 +505,6 @@ namespace AutoDial
                 errorPopup("Null input", "extractPhoneNumber() inputText is NULL");
                 return null;
             }
-        }
-
-        public string cleanNumber(string inputNumber)
-        {
-            return inputNumber;
-            /*
-            //inputNumber = "123  4 56a";
-            //Remove spaces
-            inputNumber = inputNumber.Replace(" ", string.Empty);
-            logger.Debug("Start: cleanNumber() initial number: " + inputNumber);
-            if (inputNumber != null)
-            {
-                //inputNumber = inputNumber.Replace("D", "0");
-                if (inputNumber.All(char.IsNumber))
-                {
-
-                }
-                else
-                {
-                    logger.Error("Error, number contains non Digit Characters: " + inputNumber);
-                    this.errorPopup("Null input", "number contains non Digit Characters: " + inputNumber);
-                    return null;
-                }
-                
-                logger.Debug("Returning:" + inputNumber);
-                return inputNumber;
-            }
-            else
-            {
-                logger.Error("Error, provided number is Null");
-                this.errorPopup("Null input", "cleanNumber() inputText is NULL");
-                return null;
-            }
-            */
         }
 
         #endregion
@@ -682,10 +650,11 @@ namespace AutoDial
         }
 
 
-        public void playSound(string filename)
+        public void playSound(string strFilename)
         {
-            System.Media.SoundPlayer player = new System.Media.SoundPlayer(filename);
+            System.Media.SoundPlayer player = new System.Media.SoundPlayer(strFilename);
             player.Play();
+            m_logger.Debug("Sound {0} played", strFilename);
         }
 
         public void bringToFront()

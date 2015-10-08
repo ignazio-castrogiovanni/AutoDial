@@ -21,7 +21,7 @@ namespace AutoDial
             m_genUtils = new GeneralUtils(logAndErrors);
         }
 
-        public void saveGrayScaleImg(ref Bitmap imgToConvert, string dateImage)
+        public void saveBlackAndWhiteImg(ref Bitmap imgToConvert, string dateImage)
         {
             m_logger.Debug("Start: Convert image to black and white");
             string strImgFileName = m_genUtils.generateImageFilename(dateImage);
