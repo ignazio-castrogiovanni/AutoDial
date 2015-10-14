@@ -748,16 +748,8 @@ namespace AutoDial
             {
                 if (cleanupFolderConfig == "true")
                 {
-                     // Remove files from main directory
-                    string[] files = System.IO.Directory.GetFiles(@"C:\AutoDial");
-
-                    foreach (string file in files)
-                    {
-                        System.IO.File.Delete(file);
-                    }
-
                     // Remove picture files
-                    files = System.IO.Directory.GetFiles(@"C:\AutoDial\Images");
+                    string[] files = System.IO.Directory.GetFiles(@"C:\AutoDial\Images");
 
                     foreach (string file in files)
                     {
