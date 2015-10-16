@@ -88,7 +88,11 @@ namespace AutoDial
                 
                 string rawText = ScanImage(dateStamp);
                 string phoneNumber = extractPhoneNumber(rawText);
-                
+
+                if (phoneNumber == null)
+                {
+                    return;
+                }
                 callNumber(phoneNumber);
 
                 // Get sounds info from config file
