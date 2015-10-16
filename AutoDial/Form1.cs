@@ -465,14 +465,15 @@ namespace AutoDial
             {
                 inputText = inputText.Replace("\n", " ");
                
-                Match result = Regex.Match(inputText, @"(?<=UTODIAL: )([\s0-9+-]*)", RegexOptions.Multiline);
+                // Match result = Regex.Match(inputText, @"(?<=UTODIAL: )([\s0-9+-]*)", RegexOptions.Multiline);
                 
                 // Sometimes the ':' character is mixed with the 'Z' character. Let's test if a number is recognised this way.
-                Match resultZ = Regex.Match(inputText, @"(?<=UTODIALZ )([\s0-9+-]*)", RegexOptions.Multiline);
+                // Match resultZ = Regex.Match(inputText, @"(?<=UTODIALZ )([\s0-9+-]*)", RegexOptions.Multiline);
 
                 // Sometimes the ':' character is not recognised at all! Let's just look for a 10 digits number.
                 Match resultNoColon = Regex.Match(inputText, @"(\d{10}|\d{4} \d{3} \d{3})", RegexOptions.Multiline);
 
+                /*
                 if (result.Success)
                 {
                     m_logger.Debug("Found match:" + result.Value);
@@ -482,9 +483,9 @@ namespace AutoDial
                 {
                     m_logger.Debug("Found(Z) match:" + resultZ.Value);
                     return cleanNumber(resultZ.Value);
-                }
+                }*/
 
-                else if (resultNoColon.Success)
+                if (resultNoColon.Success)
                 {
                     m_logger.Debug("Found(no colon) match:" + resultNoColon.Value);
 
