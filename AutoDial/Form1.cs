@@ -472,12 +472,12 @@ namespace AutoDial
                 if (result.Success)
                 {
                     m_logger.Debug("Found match:" + result.Value);
-                    return result.Value;
+                    return cleanNumber(result.Value);
                 }
                 else if (resultZ.Success)
                 {
                     m_logger.Debug("Found(Z) match:" + resultZ.Value);
-                    return resultZ.Value;
+                    return cleanNumber(resultZ.Value);
                 }
 
                 else if (resultNoColon.Success)
