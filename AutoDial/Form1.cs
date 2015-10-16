@@ -477,6 +477,9 @@ namespace AutoDial
                 // Sometimes the ':' character is mixed with the 'Z' character. Let's test if a number is recognised this way.
                 Match resultZ = Regex.Match(inputText, @"(?<=UTODIALZ )([\s0-9+-]*)", RegexOptions.Multiline);
 
+                // Sometimes the ':' character is not recognised at all! Let's just look for a 10 digits number.
+                Match resultNoColon = Regex.Match(inputText, @"(\d{10}|\d{4} \d{3} \d{3})", RegexOptions.Multiline);
+
                 if (result.Success)
                 {
                     m_logger.Debug("Found match:" + result.Value);
@@ -490,6 +493,14 @@ namespace AutoDial
 
                     return cleanNumber(resultZ.Value);
                 }
+
+                else if (resultNoColon.Success)
+                {
+                    m_logger.Debug("Found(no colon) match:" + resultNoColon.Value);
+
+                    return cleanNumber(resultNoColon.Value);
+                }
+
                 else
                 {
                     m_logger.Error("Unable to find Match");
@@ -507,36 +518,9 @@ namespace AutoDial
 
         public string cleanNumber(string inputNumber)
         {
+            // Just remove spaces. As easy as that.
+            inputNumber.Replace(" ", string.Empty);
             return inputNumber;
-            /*
-            //inputNumber = "123  4 56a";
-            //Remove spaces
-            inputNumber = inputNumber.Replace(" ", string.Empty);
-            logger.Debug("Start: cleanNumber() initial number: " + inputNumber);
-            if (inputNumber != null)
-            {
-                //inputNumber = inputNumber.Replace("D", "0");
-                if (inputNumber.All(char.IsNumber))
-                {
-
-                }
-                else
-                {
-                    logger.Error("Error, number contains non Digit Characters: " + inputNumber);
-                    this.errorPopup("Null input", "number contains non Digit Characters: " + inputNumber);
-                    return null;
-                }
-                
-                logger.Debug("Returning:" + inputNumber);
-                return inputNumber;
-            }
-            else
-            {
-                logger.Error("Error, provided number is Null");
-                this.errorPopup("Null input", "cleanNumber() inputText is NULL");
-                return null;
-            }
-            */
         }
 
         #endregion
