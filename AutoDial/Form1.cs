@@ -352,17 +352,9 @@ namespace AutoDial
             int height = rect.bottom - rect.top;
 
             //Create a new bitmap.
-            //            Bitmap bmpScreenshot = new Bitmap(Screen.PrimaryScreen.Bounds.Width,
-            //                                           Screen.PrimaryScreen.Bounds.Height,
-            //                                           PixelFormat.Format32bppArgb);
-
-            //Create a new bitmap.
             Bitmap bmpScreenshot = new Bitmap(width,
                                            height,
                                            PixelFormat.Format32bppArgb);
-
-            // Temporary change
-            // Store the bitmap image
 
 
             // Create a graphics object from the bitmap.
@@ -391,12 +383,6 @@ namespace AutoDial
 
             return bmpScreenshot;
 
-            /*
-            var bmp = new Bitmap(width, height, PixelFormat.Format32bppArgb);
-            Graphics graphics = Graphics.FromImage(bmp);
-            graphics.CopyFromScreen(rect.left, rect.top, 0, 0, new Size(width, height), CopyPixelOperation.SourceCopy);
-
-            bmp.Save("c:\\tmp\\test.png", System.Drawing.Imaging.ImageFormat.Png);*/
         }
 
         #endregion
@@ -412,8 +398,6 @@ namespace AutoDial
             
             if (System.IO.File.Exists(imagePath))
             {
-                // Tesseract data path 
-               
 
                 try
                 {
@@ -504,7 +488,14 @@ namespace AutoDial
                 else
                 {
                     m_logger.Error("Unable to find Match");
+                    if (!m_imgManUtils.getSafeMode())
+                    {
+                        m_imgManUtils.setSafeMode(true);
+                        errorPopup("Cant find AUTODIAL", "Enabling Auto Dial Safe Mode.");
+                    }
+                   
                     errorPopup("Cant find AUTODIAL", "extractPhoneNumber() was unable to find AUTODIAL value");
+
                     return null;
                 }
             }

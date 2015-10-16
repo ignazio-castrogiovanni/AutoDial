@@ -15,10 +15,32 @@ namespace AutoDial
         private Logger m_logger;
         private GeneralUtils m_genUtils;
 
+        string m_captureLocationX = System.Configuration.ConfigurationManager.AppSettings["captureLocationX"];
+        string m_captureLocationY = System.Configuration.ConfigurationManager.AppSettings["captureLocationY"];
+        string m_captureWidth = System.Configuration.ConfigurationManager.AppSettings["captureWidth"];
+        string m_captureHeight = System.Configuration.ConfigurationManager.AppSettings["captureHeight"];
+
+        bool m_bSafeMode = false;
+
         public ImageManipulationUtils(LogAndErrorsUtils logAndErrors, bool m_bSaveImage = true)
         {
             m_logger = logAndErrors.getLogger();
             m_genUtils = new GeneralUtils(logAndErrors);
+        }
+
+        public void setSafeMode(bool bSafe) 
+        {
+            m_bSafeMode = bSafe;
+            if (m_bSafeMode)
+            {
+                m_logger.Debug("Safe mode enabled!");
+                m_captureHeight = (2 * Int32.Parse(m_captureHeight)).ToString();
+                m_logger.Debug("New height: {0}", m_captureHeight);
+            }
+        }
+        public bool getSafeMode()
+        {
+            return m_bSafeMode;
         }
 
         public void saveGrayScaleImg(ref Bitmap imgToConvert, string dateImage)
@@ -48,16 +70,10 @@ namespace AutoDial
 
             m_logger.Debug("Start: GrayScale()");
 
-
-            string captureLocationX = System.Configuration.ConfigurationManager.AppSettings["captureLocationX"];
-            string captureLocationY = System.Configuration.ConfigurationManager.AppSettings["captureLocationY"];
-            string captureWidth = System.Configuration.ConfigurationManager.AppSettings["captureWidth"];
-            string captureHeight = System.Configuration.ConfigurationManager.AppSettings["captureHeight"];
-
-            int startX = m_genUtils.convertStringToInt("captureLocationX", captureLocationX, m_logger);
-            int startY = m_genUtils.convertStringToInt("captureLocationY", captureLocationY, m_logger);
-            int width = m_genUtils.convertStringToInt("captureWidth", captureWidth, m_logger);
-            int height = m_genUtils.convertStringToInt("captureHeight", captureHeight, m_logger);
+            int startX = m_genUtils.convertStringToInt("captureLocationX", m_captureLocationX, m_logger);
+            int startY = m_genUtils.convertStringToInt("captureLocationY", m_captureLocationY, m_logger);
+            int width = m_genUtils.convertStringToInt("captureWidth", m_captureWidth, m_logger);
+            int height = m_genUtils.convertStringToInt("captureHeight", m_captureHeight, m_logger);
 
             Bitmap OutputImage = new Bitmap(width, height);
 
