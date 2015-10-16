@@ -47,6 +47,28 @@ namespace AutoDial
         {
             m_logger.Debug("Start: Convert image to black and white");
             string strImgFileName = m_genUtils.generateImageFilename(dateImage);
+            // if (System.IO.File.Exists(strImgFileName))
+            // {
+            //     Bitmap imgToConvert = (Bitmap)Image.FromFile(strImgFileName);
+            Bitmap imgBlackAndWhite = convertToBlackAndWhite(imgToConvert);
+
+            string strBlackAndWhiteFilename = m_genUtils.generateImgBlackAndWhiteFilename(dateImage);
+            m_logger.Debug("Saving image: " + strBlackAndWhiteFilename);
+
+            imgBlackAndWhite.Save(strBlackAndWhiteFilename);
+
+            // }
+            // else
+            // {
+            //     m_logger.Error("saveBlackAndWhiteImgVersion() - File not found: " + strImgFileName);
+            //     m_logAndErrors.errorPopup("File not found", "File not found" + strImgFileName + " See the log for more details.");
+            // }
+        }
+
+        public void saveBlackAndWhiteImg(ref Bitmap imgToConvert, string dateImage)
+        {
+            m_logger.Debug("Start: Convert image to black and white");
+            string strImgFileName = m_genUtils.generateImageFilename(dateImage);
            // if (System.IO.File.Exists(strImgFileName))
            // {
            //     Bitmap imgToConvert = (Bitmap)Image.FromFile(strImgFileName);
@@ -63,12 +85,11 @@ namespace AutoDial
            //     m_logger.Error("saveBlackAndWhiteImgVersion() - File not found: " + strImgFileName);
            //     m_logAndErrors.errorPopup("File not found", "File not found" + strImgFileName + " See the log for more details.");
            // }
-        }
+   
+   }
 
         private Bitmap convertToBlackAndWhite(Bitmap Bmp)
-        {
-
-            m_logger.Debug("Start: GrayScale()");
+        {            m_logger.Debug("Start: GrayScale()");
 
             int startX = m_genUtils.convertStringToInt("captureLocationX", m_captureLocationX, m_logger);
             int startY = m_genUtils.convertStringToInt("captureLocationY", m_captureLocationY, m_logger);

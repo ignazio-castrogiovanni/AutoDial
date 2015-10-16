@@ -63,28 +63,33 @@ namespace AutoDial
         /// </summary>
         private void ExecuteProgram()
         {
+            m_logger.Info("###################################################################");
             m_logger.Info("Start: ExecuteProgram()");
+            
+            m_logAndErr.setFirstErrorSignalled(false);
+            m_logger.Debug("First error signal set to false");
 
             string strTargetProcessName = System.Configuration.ConfigurationManager.AppSettings["targetProcessName"];
             if (strTargetProcessName != null)
             {
                 m_logger.Debug("Target process read from configuration: " + strTargetProcessName);
                 string dateStamp = "";
-                Bitmap capturedImg = this.CaptureApplication(strTargetProcessName, ref dateStamp);
+                Bitmap capturedImg = CaptureApplication(strTargetProcessName, ref dateStamp);
 
                 if (capturedImg == null)
                 {
                     m_logger.Debug("Image not captured.");
-                    m_logAndErr.setFirstErrorSignalled(false);
                     return;
                 }
+                m_logger.Debug("Image captured");
+
+                m_imgManUtils.saveBlackAndWhiteImg(ref capturedImg, dateStamp);
+                m_logger.Debug("Image converted to Black and White");
                 
-                m_imgManUtils.saveGrayScaleImg(ref capturedImg, dateStamp);
+                string rawText = ScanImage(dateStamp);
+                string phoneNumber = extractPhoneNumber(rawText);
                 
-                string rawText = this.ScanImage(dateStamp);
-                string phoneNumber = this.extractPhoneNumber(rawText);
-                phoneNumber = this.cleanNumber(phoneNumber);
-                this.callNumber(phoneNumber);
+                callNumber(phoneNumber);
 
                 // Get sounds info from config file
                 string strSoundFilename = System.Configuration.ConfigurationManager.AppSettings["alertSound"];
@@ -92,7 +97,7 @@ namespace AutoDial
                 {
                     m_logger.Debug("Sound file find in config: " + strSoundFilename);
                     m_strSound = strSoundFilename;
-                    this.playSound(strSoundFilename);
+                    playSound(strSoundFilename);
 
                     string strSoundDelay = System.Configuration.ConfigurationManager.AppSettings["alertDelay"];
                     
@@ -114,7 +119,7 @@ namespace AutoDial
             else
             {
                 m_logger.Error("Target process not found in config, please check configuration file.");
-                this.errorPopup("Target process not found in config", "Target process not found in config, please check configuration file.");
+                errorPopup("Target process not found in config", "Target process not found in config, please check configuration file.");
             }
 
         }
@@ -122,7 +127,7 @@ namespace AutoDial
         private void timerTick(object sender, EventArgs e)
         {
             timer.Stop();
-            this.playSound(m_strSound);
+            playSound(m_strSound);
         }
 
         #region Hotkeys
@@ -133,7 +138,7 @@ namespace AutoDial
         public void registerHotkey()
         {
             m_logger.Debug("Start: registerHotkey()");
-            //User32.RegisterHotKey(this.Handle, 1, MOD_CONTROL, (int)Keys.F12);
+            //User32.RegisterHotKey(Handle, 1, MOD_CONTROL, (int)Keys.F12);
 
             string hotKeyIDString = System.Configuration.ConfigurationManager.AppSettings["hotKeyID"];
             string hotKeyModString = System.Configuration.ConfigurationManager.AppSettings["hotKeyMod"];
@@ -154,7 +159,7 @@ namespace AutoDial
                 hotKeyMod = int.Parse(hotKeyModString);
 
                 m_logger.Info("Setting Hotkey to: Mod:" + hotKeyMod + " ID:" + hotKeyID);
-                User32.RegisterHotKey(this.Handle, 1, hotKeyMod, hotKeyID);
+                User32.RegisterHotKey(Handle, 1, hotKeyMod, hotKeyID);
             }
 
         }
@@ -169,7 +174,7 @@ namespace AutoDial
             {
                 if ((int)m.WParam == 1)
                 {
-                    this.ExecuteProgram();
+                    ExecuteProgram();
                 }
             }
 
@@ -184,9 +189,9 @@ namespace AutoDial
         private void Form1_FormClosing(object sender, FormClosingEventArgs e)
         {
             m_logger.Debug("FormClosing, unregestering Hotkey");
-            User32.UnregisterHotKey(this.Handle, 1);
+            User32.UnregisterHotKey(Handle, 1);
 
-            this.cleanupFolder();
+            cleanupFolder();
         }
 
         #endregion
@@ -200,19 +205,19 @@ namespace AutoDial
             //string file = @"c:\image_2014-12-18_14-31-15.png";
 
             //if (System.IO.File.Exists(file))
-            if (System.IO.File.Exists(this.generateNameInitial(dateStamp)))
+            if (System.IO.File.Exists(generateNameInitial(dateStamp)))
             {
-                Bitmap imageTest = (Bitmap)Image.FromFile(this.generateNameInitial(dateStamp));
+                Bitmap imageTest = (Bitmap)Image.FromFile(generateNameInitial(dateStamp));
                 //Bitmap imageTest = (Bitmap)Image.FromFile(file);
-                imageTest = this.GrayScale(imageTest);
+                imageTest = GrayScale(imageTest);
 
                 m_logger.Debug("Saving image: " + generateNameGrey(dateStamp));
                 imageTest.Save(generateNameGrey(dateStamp));
             }
             else
             {
-                m_logger.Error("RecolourImage() unable to locate file. " + this.generateNameInitial(dateStamp));
-                this.errorPopup("RecolourImage() unable to locate file.", "RecolourImage() unable to locate file. " + this.generateNameInitial(dateStamp));
+                m_logger.Error("RecolourImage() unable to locate file. " + generateNameInitial(dateStamp));
+                errorPopup("RecolourImage() unable to locate file.", "RecolourImage() unable to locate file. " + generateNameInitial(dateStamp));
             }
         }
 
@@ -235,16 +240,16 @@ namespace AutoDial
 
 
             //int startX = 92;
-            int startX = this.ConvetStringToInt("captureLocationX", captureLocationX);
+            int startX = ConvetStringToInt("captureLocationX", captureLocationX);
 
             //int startY = 322;
-            int startY = this.ConvetStringToInt("captureLocationY", captureLocationY);
+            int startY = ConvetStringToInt("captureLocationY", captureLocationY);
 
             //int width = 500;
-            int width = this.ConvetStringToInt("captureWidth", captureWidth);
+            int width = ConvetStringToInt("captureWidth", captureWidth);
 
             //int height = 26;
-            int height = this.ConvetStringToInt("captureHeight", captureHeight);
+            int height = ConvetStringToInt("captureHeight", captureHeight);
 
 
             //int endX = width + startX;
@@ -272,7 +277,7 @@ namespace AutoDial
             {
                 m_logger.Error("Error: " + name + " Is Null, Check config file.");
 
-                this.errorPopup("Config Error", "Error: " + name + " Is Null, Check config file.");
+                errorPopup("Config Error", "Error: " + name + " Is Null, Check config file.");
 
                 return 0;
             }
@@ -371,14 +376,14 @@ namespace AutoDial
             // Save the screenshot to the specified path that the user has chosen.
             dateStamp = DateTime.Now.ToString("yyyy-MM-dd_HH-mm-ss");
 
-            m_logger.Debug("Saving image: " + this.generateNameInitial(dateStamp));
+            m_logger.Debug("Saving image: " + generateNameInitial(dateStamp));
 
             // Get the cleanUp value from the config.
             string strCleanUpValue = System.Configuration.ConfigurationManager.AppSettings["cleanupFolder"];
 
             if (strCleanUpValue != "true")
             {
-                bmpScreenshot.Save("" + this.generateNameInitial(dateStamp), System.Drawing.Imaging.ImageFormat.Png);
+                bmpScreenshot.Save("" + generateNameInitial(dateStamp), System.Drawing.Imaging.ImageFormat.Png);
             }
 
             return bmpScreenshot;
@@ -394,7 +399,7 @@ namespace AutoDial
             m_logger.Debug("Start: ScanImage()");
             string rawText = "";
             
-            var imagePath = this.generateNameGrey(dateStamp);
+            var imagePath = generateNameGrey(dateStamp);
             
             if (System.IO.File.Exists(imagePath))
             {
@@ -467,15 +472,12 @@ namespace AutoDial
                 if (result.Success)
                 {
                     m_logger.Debug("Found match:" + result.Value);
-
-                    //string value = result.Value;
-                    return cleanNumber(result.Value);
+                    return result.Value;
                 }
                 else if (resultZ.Success)
                 {
                     m_logger.Debug("Found(Z) match:" + resultZ.Value);
-
-                    return cleanNumber(resultZ.Value);
+                    return resultZ.Value;
                 }
 
                 else if (resultNoColon.Success)
@@ -521,7 +523,7 @@ namespace AutoDial
         private void executeProgramToolStripMenuItem_Click(object sender, EventArgs e)
         {
             m_logger.Debug("Executing program from menu");
-            this.ExecuteProgram();
+            ExecuteProgram();
         }
         private void exitToolStripMenuItem_Click(object sender, EventArgs e)
         {
@@ -531,7 +533,7 @@ namespace AutoDial
 
         private void Form1_Resize(object sender, EventArgs e)
         {
-            if (this.WindowState == FormWindowState.Minimized)//this code gets fired on every resize
+            if (WindowState == FormWindowState.Minimized)//this code gets fired on every resize
             {                                                                                      //so we check if the form was minimized
                 Hide();//hides the program on the taskbar
             }
@@ -540,13 +542,13 @@ namespace AutoDial
         private void showHideToolStripMenuItem_Click(object sender, EventArgs e)
         {
             m_logger.Debug("Menu Item click detected, Swaping Show/Hide.");
-            this.customToggle();
+            customToggle();
         }
 
         private void AutoDialIcon_MouseDoubleClick(object sender, MouseEventArgs e)
         {
             m_logger.Debug("Icon DoubleClick detected, Swaping Show/Hide.");
-            this.customToggle();
+            customToggle();
         }
 
         #endregion
@@ -556,7 +558,7 @@ namespace AutoDial
 
         private void customToggle()
         {
-            if (this.WindowState == FormWindowState.Normal)
+            if (WindowState == FormWindowState.Normal)
             {
                 customHide();
             }
@@ -569,14 +571,14 @@ namespace AutoDial
         private void customHide()
         {
             Hide();//hides the program on the taskbar
-            this.WindowState = FormWindowState.Minimized;//undoes the minimized state of the form
+            WindowState = FormWindowState.Minimized;//undoes the minimized state of the form
             AutoDialIcon.Visible = true;//shows our tray icon
         }
 
         private void customShow()
         {
             Show();//shows the program on taskbar
-            this.WindowState = FormWindowState.Normal;//undoes the minimized state of the form
+            WindowState = FormWindowState.Normal;//undoes the minimized state of the form
             //notifyIcon1.Visible = false;//hides tray icon again
 
         }
@@ -596,7 +598,7 @@ namespace AutoDial
             if (numberOverride == null)
             {
                 m_logger.Error("\"numberOverride\" not found in config, aborting call");
-                this.errorPopup("numberOverride not found" ,"\"numberOverride\" not found in config, aborting call");
+                errorPopup("numberOverride not found" ,"\"numberOverride\" not found in config, aborting call");
                 return;
             }
 
@@ -646,21 +648,22 @@ namespace AutoDial
                 else
                 {
                     m_logger.Error("File location found in config but not on system, Please check path is correct for current machine." + programFileLocation);
-                    this.errorPopup("Talk Program not found", "Talk File location found in config but not on system, Please check path is correct for current machine." + programFileLocation);
+                    errorPopup("Talk Program not found", "Talk File location found in config but not on system, Please check path is correct for current machine." + programFileLocation);
                 }
             }
             else
             {
                 m_logger.Error("Unable to locate \"programFileLocation\" in Config file.");
-                this.errorPopup("Talk Program not found in config", "Unable to locate \"programFileLocation\" in Config file.");
+                errorPopup("Talk Program not found in config", "Unable to locate \"programFileLocation\" in Config file.");
             }
         }
 
 
-        public void playSound(string filename)
+        public void playSound(string strFilename)
         {
-            System.Media.SoundPlayer player = new System.Media.SoundPlayer(filename);
+            System.Media.SoundPlayer player = new System.Media.SoundPlayer(strFilename);
             player.Play();
+            m_logger.Debug("Sound {0} played", strFilename);
         }
 
         public void bringToFront()
@@ -671,7 +674,7 @@ namespace AutoDial
             if (processName == null)
             {
                 m_logger.Error("talkProcessName is not found in config, unable to bring up window.");
-                this.errorPopup("talkProcessName is not found", "talkProcessName not foind in config file, please check file");
+                errorPopup("talkProcessName is not found", "talkProcessName not foind in config file, please check file");
                 return;
             }
             
@@ -681,7 +684,7 @@ namespace AutoDial
             {
                 m_logger.Error("Talk process not found: " + processName + Environment.NewLine + "Please check that the has opened correctly and is running, if so then check that the configured processName is correct");
 
-                this.errorPopup("Error", "Talk process not found, unable to automatically bring up talk window: " + processName + Environment.NewLine + "Please check that the program is running, if so then check that the configured processName is correct");
+                errorPopup("Error", "Talk process not found, unable to automatically bring up talk window: " + processName + Environment.NewLine + "Please check that the program is running, if so then check that the configured processName is correct");
             }
             else
             {
@@ -754,16 +757,8 @@ namespace AutoDial
             {
                 if (cleanupFolderConfig == "true")
                 {
-                     // Remove files from main directory
-                    string[] files = System.IO.Directory.GetFiles(@"C:\AutoDial");
-
-                    foreach (string file in files)
-                    {
-                        System.IO.File.Delete(file);
-                    }
-
                     // Remove picture files
-                    files = System.IO.Directory.GetFiles(@"C:\AutoDial\Images");
+                    string[] files = System.IO.Directory.GetFiles(@"C:\AutoDial\Images");
 
                     foreach (string file in files)
                     {
