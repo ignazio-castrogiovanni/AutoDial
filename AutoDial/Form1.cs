@@ -23,9 +23,8 @@ namespace AutoDial
 {
     public partial class Form1 : Form
     {
-        // It's not ideal but it's better to be hardcoded than to be in the config file as user can modify it and create problems.
-        const string TESSERACT_DATA_PATH = "C:\\Autodial\\Dialing\\AutoDial_0.14\\tessdata";
-
+        
+        private string TESSERACT_DATA_PATH;
         private static Logger m_logger;
         private LogAndErrorsUtils m_logAndErr;
         private ImageManipulationUtils m_imgManUtils;
@@ -41,6 +40,13 @@ namespace AutoDial
        
         public Form1()
         {
+            // It's not ideal but it's better to be hardcoded than to be in the config file as user can modify it and create problems.
+            string TESSERACT_DATA_PATH = System.Configuration.ConfigurationManager.AppSettings["tessdataPath"];
+            if (TESSERACT_DATA_PATH == null)
+            {
+                TESSERACT_DATA_PATH = @"C:\\Autodial\\Dialing\\AutoDial_0.14\\tessdata";
+            }
+
             //Setup the Logging system
             m_logAndErr = new LogAndErrorsUtils(AutoDialIcon, ToolTipIcon.Error);
             m_imgManUtils = new ImageManipulationUtils(m_logAndErr);
@@ -206,13 +212,9 @@ namespace AutoDial
         {
             m_logger.Debug("Start: RecolourImage()");
 
-            //string file = @"c:\image_2014-12-18_14-31-15.png";
-
-            //if (System.IO.File.Exists(file))
             if (System.IO.File.Exists(generateNameInitial(dateStamp)))
             {
                 Bitmap imageTest = (Bitmap)Image.FromFile(generateNameInitial(dateStamp));
-                //Bitmap imageTest = (Bitmap)Image.FromFile(file);
                 imageTest = GrayScale(imageTest);
 
                 m_logger.Debug("Saving image: " + generateNameGrey(dateStamp));
@@ -241,23 +243,10 @@ namespace AutoDial
             string captureWidth = System.Configuration.ConfigurationManager.AppSettings["captureWidth"];
             string captureHeight = System.Configuration.ConfigurationManager.AppSettings["captureHeight"];
 
-
-
-            //int startX = 92;
             int startX = ConvetStringToInt("captureLocationX", captureLocationX);
-
-            //int startY = 322;
             int startY = ConvetStringToInt("captureLocationY", captureLocationY);
-
-            //int width = 500;
             int width = ConvetStringToInt("captureWidth", captureWidth);
-
-            //int height = 26;
             int height = ConvetStringToInt("captureHeight", captureHeight);
-
-
-            //int endX = width + startX;
-            //int endY = height + startY;
 
             Bitmap OutputImage = new Bitmap(width, height);
 
@@ -288,33 +277,6 @@ namespace AutoDial
 
             return Convert.ToInt32(source);
         }
-
-        /*
-         
-         public Bitmap GrayScale(Bitmap Bmp)
-        {
-            logger.Debug("Start: GrayScale()");
-            int startY = 0;
-            int startX = 0;
-
-            int width = 0;
-            int height = 0;
-
-            int rgb;
-            Color c;
-
-            for (int y = 0; y < Bmp.Height; y++)
-                for (int x = 0; x < Bmp.Width; x++)
-                {
-                    c = Bmp.GetPixel(x, y);
-                    //rgb = (int)((c.R + c.G + c.B) / 3);
-                    rgb = (int)(c.R * 0.21 + c.G * 0.72 + c.B * 0.07);
-                    Bmp.SetPixel(x, y, Color.FromArgb(rgb, rgb, rgb));
-                }
-            return Bmp;
-        }
-         
-         */
 
         #endregion
 
@@ -464,6 +426,22 @@ namespace AutoDial
             if (inputText != null)
             {
                 inputText = inputText.Replace("\n", " ");
+
+                // RegEx from config file.
+                // If a custom reg exp is set, give precedence to it.
+                string customRegExp = System.Configuration.ConfigurationManager.AppSettings["regExpPattern"];
+                string strBooh = System.Configuration.ConfigurationManager.AppSettings["targetProcessName"];
+                if (customRegExp != null)
+                {
+                    Match resultCustom = Regex.Match(inputText, customRegExp, RegexOptions.Multiline);
+                    if (resultCustom.Success)
+                    {
+                        m_logger.Debug("Found(regexp custom) match:" + resultCustom.Value);
+
+                        return cleanNumber(resultCustom.Value);
+                    }
+                }
+
                
                 // Match result = Regex.Match(inputText, @"(?<=UTODIAL: )([\s0-9+-]*)", RegexOptions.Multiline);
                 
@@ -471,7 +449,7 @@ namespace AutoDial
                 // Match resultZ = Regex.Match(inputText, @"(?<=UTODIALZ )([\s0-9+-]*)", RegexOptions.Multiline);
 
                 // Sometimes the ':' character is not recognised at all! Let's just look for a 10 digits number.
-                Match resultNoColon = Regex.Match(inputText, @"(\d{10}|\d{4} \d{3} \d{3})", RegexOptions.Multiline);
+                Match resultNoColon = Regex.Match(inputText, @"(\d{10}|\d+ \d+ \d+)", RegexOptions.Multiline);
 
                 /*
                 if (result.Success)
@@ -517,7 +495,8 @@ namespace AutoDial
         public string cleanNumber(string inputNumber)
         {
             // Just remove spaces. As easy as that.
-            inputNumber.Replace(" ", string.Empty);
+            inputNumber = Regex.Replace(inputNumber, @"\s+", "");
+            m_logger.Info("Number cleaned: " + inputNumber);
             return inputNumber;
         }
 
