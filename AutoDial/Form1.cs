@@ -430,7 +430,6 @@ namespace AutoDial
                 // RegEx from config file.
                 // If a custom reg exp is set, give precedence to it.
                 string customRegExp = System.Configuration.ConfigurationManager.AppSettings["regExpPattern"];
-                string strBooh = System.Configuration.ConfigurationManager.AppSettings["targetProcessName"];
                 if (customRegExp != null)
                 {
                     Match resultCustom = Regex.Match(inputText, customRegExp, RegexOptions.Multiline);
@@ -442,32 +441,12 @@ namespace AutoDial
                     }
                 }
 
-               
-                // Match result = Regex.Match(inputText, @"(?<=UTODIAL: )([\s0-9+-]*)", RegexOptions.Multiline);
-                
-                // Sometimes the ':' character is mixed with the 'Z' character. Let's test if a number is recognised this way.
-                // Match resultZ = Regex.Match(inputText, @"(?<=UTODIALZ )([\s0-9+-]*)", RegexOptions.Multiline);
+                Match result = Regex.Match(inputText, @"(\d{10}|\d+ \d+ \d+)", RegexOptions.Multiline);
 
-                // Sometimes the ':' character is not recognised at all! Let's just look for a 10 digits number.
-                Match resultNoColon = Regex.Match(inputText, @"(\d{10}|\d+ \d+ \d+)", RegexOptions.Multiline);
-
-                /*
                 if (result.Success)
                 {
                     m_logger.Debug("Found match:" + result.Value);
                     return cleanNumber(result.Value);
-                }
-                else if (resultZ.Success)
-                {
-                    m_logger.Debug("Found(Z) match:" + resultZ.Value);
-                    return cleanNumber(resultZ.Value);
-                }*/
-
-                if (resultNoColon.Success)
-                {
-                    m_logger.Debug("Found(no colon) match:" + resultNoColon.Value);
-
-                    return cleanNumber(resultNoColon.Value);
                 }
 
                 else
@@ -608,8 +587,6 @@ namespace AutoDial
                     }
                     m_logger.Info("Calling: " + number);
 
-                    //System.Diagnostics.Process newProcess = new Process();
-                    //string fileLocation = @"G:\Programs\Notepad++\notepad++.exe";
                     string param = @"-dial """ + number + @" "" ";
 
                     System.Diagnostics.ProcessStartInfo procStartInfo = new System.Diagnostics.ProcessStartInfo(programFileLocation, param);
@@ -625,9 +602,7 @@ namespace AutoDial
                     proc.StartInfo = procStartInfo;
                     proc.Start();
 
-                    //proc.WaitForExit(1000);
                     bringToFront();
-                    //proc.WaitForExit();
                 }
                 else
                 {
@@ -684,8 +659,6 @@ namespace AutoDial
                     process = processArray[i];
                 }
             }
-            
-            // process = processArray[0];
 
             User32.SetForegroundWindow(process.MainWindowHandle);
         }
@@ -767,33 +740,3 @@ namespace AutoDial
     }
 
 }
-/*
- 
- * 
-        /// <summary>
-        /// Capture an image of the enture screen and save it to a file.
-        /// </summary>
-        public void CaptureScreen()
-        {
-            //Create a new bitmap.
-            Bitmap bmpScreenshot = new Bitmap(Screen.PrimaryScreen.Bounds.Width,
-                                           Screen.PrimaryScreen.Bounds.Height,
-                                           PixelFormat.Format32bppArgb);
-
-            // Create a graphics object from the bitmap.
-            var gfxScreenshot = Graphics.FromImage(bmpScreenshot);
-
-            // Take the screenshot from the upper left corner to the right bottom corner.
-            gfxScreenshot.CopyFromScreen(Screen.PrimaryScreen.Bounds.X,
-                                        Screen.PrimaryScreen.Bounds.Y,
-                                        0,
-                                        0,
-                                        Screen.PrimaryScreen.Bounds.Size,
-                                        CopyPixelOperation.SourceCopy);
-
-            // Save the screenshot to the specified path that the user has chosen.
-            bmpScreenshot.Save("Screenshot.png", System.Drawing.Imaging.ImageFormat.Png);
-        }
-
- 
- */
