@@ -1,6 +1,6 @@
 ﻿namespace AutoDial
 {
-    partial class Form1
+    partial class MainForm
     {
         /// <summary>
         /// Required designer variable.
@@ -29,7 +29,7 @@
         private void InitializeComponent()
         {
             this.components = new System.ComponentModel.Container();
-            System.ComponentModel.ComponentResourceManager resources = new System.ComponentModel.ComponentResourceManager(typeof(Form1));
+            System.ComponentModel.ComponentResourceManager resources = new System.ComponentModel.ComponentResourceManager(typeof(MainForm));
             this.AutoDialIcon = new System.Windows.Forms.NotifyIcon(this.components);
             this.contextMenuStrip = new System.Windows.Forms.ContextMenuStrip(this.components);
             this.exitToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
@@ -76,16 +76,16 @@
             this.executeProgramToolStripMenuItem.Text = "Execute Program";
             this.executeProgramToolStripMenuItem.Click += new System.EventHandler(this.executeProgramToolStripMenuItem_Click);
             // 
-            // Form1
+            // MainForm
             // 
             this.AutoScaleDimensions = new System.Drawing.SizeF(6F, 13F);
             this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font;
             this.ClientSize = new System.Drawing.Size(330, 300);
             this.ContextMenuStrip = this.contextMenuStrip;
-            this.Name = "Form1";
-            this.Text = "Form1";
-            this.FormClosing += new System.Windows.Forms.FormClosingEventHandler(this.Form1_FormClosing);
-            this.Resize += new System.EventHandler(this.Form1_Resize);
+            this.Name = "MainForm";
+            this.Text = "MainForm";
+            this.FormClosing += new System.Windows.Forms.FormClosingEventHandler(this.MainForm_FormClosing);
+            this.Resize += new System.EventHandler(this.MainForm_Resize);
             this.contextMenuStrip.ResumeLayout(false);
             this.ResumeLayout(false);
 

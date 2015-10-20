@@ -21,7 +21,7 @@ using System.IO;
 
 namespace AutoDial
 {
-    public partial class Form1 : Form
+    public partial class MainForm : Form
     {
         
         private string TESSERACT_DATA_PATH;
@@ -38,14 +38,21 @@ namespace AutoDial
         /// Keep track if we have sent an error popup notification, if so use this value to supress future popups, under the assumption that the first one is the most important and probably the originator of the future popups.
         /// </summary>
        
-        public Form1()
+        public MainForm()
         {
-            // It's not ideal but it's better to be hardcoded than to be in the config file as user can modify it and create problems.
+            // Give the process high priority
+            System.Diagnostics.Process.GetCurrentProcess().PriorityClass = ProcessPriorityClass.High;
+
+            // Give the admins a chance to change the path of tessdata
             string TESSERACT_DATA_PATH = System.Configuration.ConfigurationManager.AppSettings["tessdataPath"];
             if (TESSERACT_DATA_PATH == null)
             {
-                TESSERACT_DATA_PATH = @"C:\\Autodial\\Dialing\\AutoDial_0.14\\tessdata";
+                
+                TESSERACT_DATA_PATH = @"C:\\Autodial\\Dialing\\tessdata";
+                m_logger.Error("No Config Tesseract path. Setting to: {0}", TESSERACT_DATA_PATH);
             }
+
+           
 
             //Setup the Logging system
             m_logAndErr = new LogAndErrorsUtils(AutoDialIcon, ToolTipIcon.Error);
@@ -58,6 +65,12 @@ namespace AutoDial
 
             m_logger.Info("###################################################################");
             m_logger.Info("Starting Program");
+            
+            // Checking for tesseract data path
+            if (!System.IO.Directory.Exists(TESSERACT_DATA_PATH))
+            {
+                m_logger.Error("Couldn't find tesseract in {0}", TESSERACT_DATA_PATH);
+            }
 
             registerHotkey();
 
@@ -107,7 +120,6 @@ namespace AutoDial
                 {
                     m_logger.Debug("Sound file find in config: " + strSoundFilename);
                     m_strSound = strSoundFilename;
-                    playSound(strSoundFilename);
 
                     string strSoundDelay = System.Configuration.ConfigurationManager.AppSettings["alertDelay"];
                     
@@ -196,7 +208,7 @@ namespace AutoDial
         /// </summary>
         /// <param name="sender"></param>
         /// <param name="e"></param>
-        private void Form1_FormClosing(object sender, FormClosingEventArgs e)
+        private void MainForm_FormClosing(object sender, FormClosingEventArgs e)
         {
             m_logger.Debug("FormClosing, unregestering Hotkey");
             User32.UnregisterHotKey(Handle, 1);
@@ -376,10 +388,11 @@ namespace AutoDial
                     var resultPrinter = new ResultPrinter(logger2);
 
                     
-                   using (var engine = new TesseractEngine(@TESSERACT_DATA_PATH, "eng", EngineMode.Default))
+                   //using (var engine = new TesseractEngine(@TESSERACT_DATA_PATH, "eng", EngineMode.Default))
+                    using (var engine = new TesseractEngine(@"./tessdata", "eng", EngineMode.Default))
                     {
                         
-                        m_logger.Trace("Tesseract found in {0}", TESSERACT_DATA_PATH);
+                        //m_logger.Trace("Tesseract found in {0}", TESSERACT_DATA_PATH);
 
                         using (var img = Pix.LoadFromFile(imagePath))
                         {
@@ -401,7 +414,7 @@ namespace AutoDial
                 }
                 catch (Exception e)
                 {
-                    m_logger.Trace("Couldn't find the tesseract data on {0}", TESSERACT_DATA_PATH);
+                    m_logger.Trace("Couldn't find the tesseract data on {0}", @TESSERACT_DATA_PATH);
                     Trace.TraceError(e.ToString());
                     Console.WriteLine("Unexpected Error: " + e.Message);
                     Console.WriteLine("Details: ");
@@ -494,7 +507,7 @@ namespace AutoDial
             Application.Exit();
         }
 
-        private void Form1_Resize(object sender, EventArgs e)
+        private void MainForm_Resize(object sender, EventArgs e)
         {
             if (WindowState == FormWindowState.Minimized)//this code gets fired on every resize
             {                                                                                      //so we check if the form was minimized
