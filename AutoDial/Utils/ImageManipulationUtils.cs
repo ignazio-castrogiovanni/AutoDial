@@ -33,36 +33,14 @@ namespace AutoDial
             m_bSafeMode = bSafe;
             if (m_bSafeMode)
             {
-                m_logger.Debug("Safe mode enabled!");
-                m_captureHeight = (2 * Int32.Parse(m_captureHeight)).ToString();
-                m_logger.Debug("New height: {0}", m_captureHeight);
+               // m_logger.Debug("Safe mode enabled!");
+               // m_captureHeight = (2 * Int32.Parse(m_captureHeight)).ToString();
+               // m_logger.Debug("New height: {0}", m_captureHeight);
             }
         }
         public bool getSafeMode()
         {
             return m_bSafeMode;
-        }
-
-        public void saveGrayScaleImg(ref Bitmap imgToConvert, string dateImage)
-        {
-            m_logger.Debug("Start: Convert image to black and white");
-            string strImgFileName = m_genUtils.generateImageFilename(dateImage);
-            // if (System.IO.File.Exists(strImgFileName))
-            // {
-            //     Bitmap imgToConvert = (Bitmap)Image.FromFile(strImgFileName);
-            Bitmap imgBlackAndWhite = convertToBlackAndWhite(imgToConvert);
-
-            string strBlackAndWhiteFilename = m_genUtils.generateImgBlackAndWhiteFilename(dateImage);
-            m_logger.Debug("Saving image: " + strBlackAndWhiteFilename);
-
-            imgBlackAndWhite.Save(strBlackAndWhiteFilename);
-
-            // }
-            // else
-            // {
-            //     m_logger.Error("saveBlackAndWhiteImgVersion() - File not found: " + strImgFileName);
-            //     m_logAndErrors.errorPopup("File not found", "File not found" + strImgFileName + " See the log for more details.");
-            // }
         }
 
         public void saveBlackAndWhiteImg(ref Bitmap imgToConvert, string dateImage)
@@ -73,6 +51,10 @@ namespace AutoDial
            // {
            //     Bitmap imgToConvert = (Bitmap)Image.FromFile(strImgFileName);
                 Bitmap imgBlackAndWhite = convertToBlackAndWhite(imgToConvert);
+                if (imgBlackAndWhite == null)
+                {
+                    return;
+                }
 
                 string strBlackAndWhiteFilename = m_genUtils.generateImgBlackAndWhiteFilename(dateImage);
                 m_logger.Debug("Saving image: " + strBlackAndWhiteFilename);
@@ -96,10 +78,25 @@ namespace AutoDial
             int width = m_genUtils.convertStringToInt("captureWidth", m_captureWidth, m_logger);
             int height = m_genUtils.convertStringToInt("captureHeight", m_captureHeight, m_logger);
 
+            if (m_bSafeMode)
+            {
+                height = height * 2;
+            }
             Bitmap OutputImage = new Bitmap(width, height);
 
             int rgb;
             Color c;
+
+            // Check for image size
+            int colourBmpWidth = Bmp.Width;
+            int colourBmpHeight = Bmp.Height;
+
+            if (((startX + width - 1) > colourBmpWidth) || ((startY + height  - 1) > colourBmpHeight)) 
+            {
+                m_logger.Debug("Wrong size of the original image. Probably couldn,t capture it.");
+                return null;
+            }
+
 
             for (int y = 0; y < height; y++)
                 for (int x = 0; x < width; x++)

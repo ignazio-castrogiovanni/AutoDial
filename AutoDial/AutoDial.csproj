@@ -165,6 +165,7 @@
     <Compile Include="Utils\GeneralUtils.cs" />
     <Compile Include="Utils\ImageManipulationUtils.cs" />
     <Compile Include="Utils\LogAndErrorsUtils.cs" />
+    <Compile Include="Utils\TalkLogMonitorUtil.cs" />
     <EmbeddedResource Include="Form1.resx">
       <DependentUpon>Form1.cs</DependentUpon>
     </EmbeddedResource>

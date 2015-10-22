@@ -40,6 +40,11 @@ namespace AutoDial
        
         public MainForm()
         {
+            //Setup the Logging system
+            m_logAndErr = new LogAndErrorsUtils(AutoDialIcon, ToolTipIcon.Error);
+            m_imgManUtils = new ImageManipulationUtils(m_logAndErr);
+            m_logger = m_logAndErr.getLogger();
+
             // Give the process high priority
             System.Diagnostics.Process.GetCurrentProcess().PriorityClass = ProcessPriorityClass.High;
 
@@ -54,10 +59,7 @@ namespace AutoDial
 
            
 
-            //Setup the Logging system
-            m_logAndErr = new LogAndErrorsUtils(AutoDialIcon, ToolTipIcon.Error);
-            m_imgManUtils = new ImageManipulationUtils(m_logAndErr);
-            m_logger = m_logAndErr.getLogger();
+           
             
            
             //Initialise the Form
@@ -388,8 +390,10 @@ namespace AutoDial
                     var resultPrinter = new ResultPrinter(logger2);
 
                     
-                   //using (var engine = new TesseractEngine(@TESSERACT_DATA_PATH, "eng", EngineMode.Default))
                     using (var engine = new TesseractEngine(@"./tessdata", "eng", EngineMode.Default))
+                   
+                    // Only digits - It doesn't work properly but we'll leave it here in case we decide to take this way
+                    // using (var engine = new TesseractEngine(@"./tessdata", "eng", EngineMode.Default, "./tessdata/config/onlyDigits.cfg"))
                     {
                         
                         //m_logger.Trace("Tesseract found in {0}", TESSERACT_DATA_PATH);
@@ -407,6 +411,10 @@ namespace AutoDial
                                     m_logger.Trace("Text: {0}", rawText);
                                     m_logger.Trace("Mean confidence: {0}", page.GetMeanConfidence());
 
+                                    // Fix Bug when the digit '1' is interpreted as the letter 'l'
+                                    rawText = rawText.Replace('l', '1');
+
+                                    m_logger.Trace("Text ('l' to 1): {0}", rawText);
                                 }
                             }
                         }
@@ -425,7 +433,7 @@ namespace AutoDial
             else
             {
                 m_logger.Error("ScanImage unable to locate file: " + imagePath);
-                errorPopup("File Not Found", "ScanImage unable to locate file: " + imagePath);
+                errorPopup("Couldn't capture image", "Is SurveyCraft window the main visible window?");
                 
                 return null;
             }
