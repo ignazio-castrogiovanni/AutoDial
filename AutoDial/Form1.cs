@@ -32,6 +32,8 @@ namespace AutoDial
         // Timer used to play sound after a config timeout.
         private Timer timer = new Timer();
 
+        // Alert sound
+        System.Media.SoundPlayer m_player;
         private string m_strSound;
 
         /// <summary>
@@ -45,9 +47,6 @@ namespace AutoDial
             m_imgManUtils = new ImageManipulationUtils(m_logAndErr);
             m_logger = m_logAndErr.getLogger();
 
-            // Give the process high priority
-            System.Diagnostics.Process.GetCurrentProcess().PriorityClass = ProcessPriorityClass.High;
-
             // Give the admins a chance to change the path of tessdata
             string TESSERACT_DATA_PATH = System.Configuration.ConfigurationManager.AppSettings["tessdataPath"];
             if (TESSERACT_DATA_PATH == null)
@@ -58,9 +57,8 @@ namespace AutoDial
             }
 
            
-
-           
-            
+            // Initilialise event for timer tick
+            timer.Tick += new EventHandler(timerTick);
            
             //Initialise the Form
             InitializeComponent();
@@ -122,6 +120,7 @@ namespace AutoDial
                 {
                     m_logger.Debug("Sound file find in config: " + strSoundFilename);
                     m_strSound = strSoundFilename;
+                    m_player = new System.Media.SoundPlayer(m_strSound);
 
                     string strSoundDelay = System.Configuration.ConfigurationManager.AppSettings["alertDelay"];
                     
@@ -131,7 +130,6 @@ namespace AutoDial
                     if (bIsNumeric)
                     {
                         timer.Interval = delayTimer;
-                        timer.Tick += new EventHandler(timerTick);
                         timer.Start();
                     }
                 }
@@ -151,7 +149,7 @@ namespace AutoDial
         private void timerTick(object sender, EventArgs e)
         {
             timer.Stop();
-            playSound(m_strSound);
+            playSound();
         }
 
         #region Hotkeys
@@ -639,11 +637,11 @@ namespace AutoDial
         }
 
 
-        public void playSound(string strFilename)
+        public void playSound()
         {
-            System.Media.SoundPlayer player = new System.Media.SoundPlayer(strFilename);
-            player.Play();
-            m_logger.Debug("Sound {0} played", strFilename);
+            
+            m_player.Play();
+            m_logger.Debug("Sound {0} played");
         }
 
         public void bringToFront()
