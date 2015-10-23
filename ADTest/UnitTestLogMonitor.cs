@@ -1,4 +1,5 @@
 ﻿using System;
+using System.IO;
 using System.Text.RegularExpressions;
 using AutoDial.UtilLogMonitor;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
@@ -44,6 +45,20 @@ namespace ADTest
             patternFound = monUtil.checkForPatterns(strLineFromFile);
 
             Assert.IsTrue(patternFound);
+        }
+        [TestMethod]
+        public void TestGetLastLineFromFile()
+        {
+            TalkLogMonitorUtil monUtil = new TalkLogMonitorUtil(@"C:\Iggy\TestTalkMonitor.txt", null, null); // We just require the file path
+
+            StreamWriter stWriter = File.AppendText(@"C:\Iggy\TestTalkMonitor.txt");
+            //DateTime timestamp = new DateTime();
+            string strExpectedLine = "Last line " + DateTime.Now.ToString();
+            stWriter.WriteLine(strExpectedLine);
+            stWriter.Flush();
+            string strActual = monUtil.getLastLineFromFile();
+
+            Assert.AreEqual(strExpectedLine, strActual);
         }
     }
 }
