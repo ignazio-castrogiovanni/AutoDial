@@ -11,16 +11,15 @@ namespace AutoDial.UtilLogMonitor
 {
     public class TalkLogMonitorUtil
     {
-        private Action m_actionToCall;
+        private Action<string> m_actionToCall;
         private Regex m_regExArr;
         private string m_strFilename;
 
         // Contructor with callback to call when we find the right log.
-        public TalkLogMonitorUtil(string strFilename, Action callback, Regex regExArray)
+        public TalkLogMonitorUtil(string strFilename, Action<string> callback, Regex regExArray)
         {
             // Get talk log file path from talk file path
-            m_strFilename = getTalkLogFileName(DateTime.Now, strFilename);
-
+            m_strFilename = strFilename;
             m_actionToCall = callback;
             m_regExArr = regExArray;
 
@@ -32,7 +31,8 @@ namespace AutoDial.UtilLogMonitor
 
             // Set file watcher
             FileSystemWatcher fileWatcher = new FileSystemWatcher();
-            fileWatcher.Path = m_strFilename;
+            fileWatcher.Path = Path.GetDirectoryName(m_strFilename);
+            fileWatcher.Filter = Path.GetFileName(m_strFilename);
             fileWatcher.NotifyFilter = NotifyFilters.LastWrite;
             fileWatcher.Changed += new FileSystemEventHandler(OnChanged);
             
@@ -52,7 +52,7 @@ namespace AutoDial.UtilLogMonitor
             // (3) If the pattern applies, call callback
             if (bPatternFound)
             {
-                m_actionToCall();
+                m_actionToCall(strLastLine);
             }
         }
 
@@ -89,7 +89,7 @@ namespace AutoDial.UtilLogMonitor
             return false;
         }
 
-        public string getTalkLogFileName(DateTime date, string strTalkPath)
+        public static string getTalkLogFileName(DateTime date, string strTalkPath)
         {
             
             // Get initial part of talk path

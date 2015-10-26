@@ -17,6 +17,8 @@ using Tesseract.ConsoleDemo;
 using System.Configuration;
 using System.IO;
 
+using AutoDial.UtilLogMonitor;
+
 
 
 namespace AutoDial
@@ -28,9 +30,10 @@ namespace AutoDial
         private static Logger m_logger;
         private LogAndErrorsUtils m_logAndErr;
         private ImageManipulationUtils m_imgManUtils;
+        private TalkLogMonitorUtil m_talkLogMonitor;
         
         // Timer used to play sound after a config timeout.
-        private Timer timer = new Timer();
+        private Timer m_timer = new Timer();
 
         // Alert sound
         System.Media.SoundPlayer m_player;
@@ -58,7 +61,7 @@ namespace AutoDial
 
            
             // Initilialise event for timer tick
-            timer.Tick += new EventHandler(timerTick);
+            m_timer.Tick += new EventHandler(timerTick);
            
             //Initialise the Form
             InitializeComponent();
@@ -129,8 +132,8 @@ namespace AutoDial
                     bool bIsNumeric = int.TryParse(strSoundDelay, out delayTimer);
                     if (bIsNumeric)
                     {
-                        timer.Interval = delayTimer;
-                        timer.Start();
+                        m_timer.Interval = delayTimer;
+                        m_timer.Start();
                     }
                 }
                 else
@@ -148,7 +151,7 @@ namespace AutoDial
 
         private void timerTick(object sender, EventArgs e)
         {
-            timer.Stop();
+            m_timer.Stop();
             playSound();
         }
 
@@ -269,7 +272,6 @@ namespace AutoDial
                 for (int x = 0; x < width; x++)
                 {
                     c = Bmp.GetPixel(x + startX, y + startY);
-                    //rgb = (int)((c.R + c.G + c.B) / 3);
                     rgb = (int)(c.R * 0.21 + c.G * 0.72 + c.B * 0.07);
                     OutputImage.SetPixel(x, y, Color.FromArgb(rgb, rgb, rgb));
                 }
@@ -621,6 +623,14 @@ namespace AutoDial
                     proc.StartInfo = procStartInfo;
                     proc.Start();
 
+                    // TalkLogMonitorUtil(string strFilename, Action callback, Regex regExArray)
+                    // Monitor file for changes, provide a callback method to the monitor utility 
+                    // so that the alert sound timer is cancelled if call is answered.
+                    
+                    Regex regEx = new Regex("answered|disconnected");
+                    m_talkLogMonitor = new TalkLogMonitorUtil(programFileLocation, stopAlertTimer, regEx);
+                    m_talkLogMonitor.startMonitoringLogFile();
+
                     bringToFront();
                 }
                 else
@@ -636,6 +646,11 @@ namespace AutoDial
             }
         }
 
+        private void stopAlertTimer(string strLastLine)
+        {
+            m_logger.Debug("Pattern found in " + strLastLine + " - Alert timer stopped");
+            m_timer.Stop();
+        }
 
         public void playSound()
         {
