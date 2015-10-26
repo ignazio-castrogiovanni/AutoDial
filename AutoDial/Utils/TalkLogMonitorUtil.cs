@@ -14,6 +14,7 @@ namespace AutoDial.UtilLogMonitor
         private Action<string> m_actionToCall;
         private Regex m_regExArr;
         private string m_strFilename;
+        FileSystemWatcher m_fileWatcher;
 
         // Contructor with callback to call when we find the right log.
         public TalkLogMonitorUtil(string strFilename, Action<string> callback, Regex regExArray)
@@ -23,21 +24,25 @@ namespace AutoDial.UtilLogMonitor
             m_actionToCall = callback;
             m_regExArr = regExArray;
 
+            // Set file watcher
+            m_fileWatcher = new FileSystemWatcher();
+            m_fileWatcher.Path = Path.GetDirectoryName(m_strFilename);
+            m_fileWatcher.Filter = Path.GetFileName(m_strFilename);
+            m_fileWatcher.NotifyFilter = NotifyFilters.LastWrite;
+            m_fileWatcher.Changed += new FileSystemEventHandler(OnChanged);
         }
 
         
         public void startMonitoringLogFile()
-        {
-
-            // Set file watcher
-            FileSystemWatcher fileWatcher = new FileSystemWatcher();
-            fileWatcher.Path = Path.GetDirectoryName(m_strFilename);
-            fileWatcher.Filter = Path.GetFileName(m_strFilename);
-            fileWatcher.NotifyFilter = NotifyFilters.LastWrite;
-            fileWatcher.Changed += new FileSystemEventHandler(OnChanged);
-            
+        { 
             // Start monitoring file
-            fileWatcher.EnableRaisingEvents = true;
+            m_fileWatcher.EnableRaisingEvents = true;
+        }
+
+        public void stopMonitoringLogFile()
+        {
+            // Start monitoring file
+            m_fileWatcher.EnableRaisingEvents = false;
         }
 
         public void OnChanged(object source, FileSystemEventArgs e)
@@ -89,7 +94,7 @@ namespace AutoDial.UtilLogMonitor
             return false;
         }
 
-        public static string getTalkLogFileName(DateTime date, string strTalkPath)
+        public static string getTalkLogFileNameFromTalkPath(DateTime date, string strTalkPath)
         {
             
             // Get initial part of talk path
@@ -117,6 +122,23 @@ namespace AutoDial.UtilLogMonitor
             {
                 return null;
             }
+        }
+
+        public static string getTalkLogFileNameFromTalkLogDirectory(DateTime date, string strTalkLogPath)
+        {
+
+           
+
+                // Convert date in the talk log format
+                string strDay = (date.Day.ToString().Length == 2) ? date.Day.ToString() : "0" + date.Day.ToString();
+                string strMonth = (date.Month.ToString().Length == 2) ? date.Month.ToString() : "0" + date.Month.ToString();
+                string strDate = date.Year.ToString() + '-' + strMonth + '-' + strDay;
+
+                // Generate last part of file name
+                string strCompleteLogPath = strTalkLogPath + strDate + " Express Talk Log.txt";
+
+                return strCompleteLogPath;
+            
         }
     }
 }

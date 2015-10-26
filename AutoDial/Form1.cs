@@ -75,8 +75,15 @@ namespace AutoDial
                 m_logger.Error("Couldn't find tesseract in {0}", TESSERACT_DATA_PATH);
             }
 
-            registerHotkey();
+            // Set the Talk Log Monitor Util
+            Regex regEx = new Regex("answered|disconnected");
+            string strTalkLogPath = System.Configuration.ConfigurationManager.AppSettings["talkLogPath"];
+            m_logger.Info("Talk Log path: " + strTalkLogPath);
+            string strLogFilePath = TalkLogMonitorUtil.getTalkLogFileNameFromTalkLogDirectory(DateTime.Today, strTalkLogPath);
+            m_logger.Info("Talk File Log path: " + strLogFilePath);
+            m_talkLogMonitor = new TalkLogMonitorUtil(strLogFilePath, stopAlertTimer, regEx);
 
+            registerHotkey();
             customHide();
         }
 
@@ -612,6 +619,12 @@ namespace AutoDial
 
                     System.Diagnostics.ProcessStartInfo procStartInfo = new System.Diagnostics.ProcessStartInfo(programFileLocation, param);
 
+                    // TalkLogMonitorUtil(string strFilename, Action callback, Regex regExArray)
+                    // Monitor file for changes, provide a callback method to the monitor utility 
+                    // so that the alert sound timer is cancelled if call is answered.
+                    m_talkLogMonitor.startMonitoringLogFile();
+                    m_logger.Info("Talk Log Monitor started");
+
                     // The following commands are needed to redirect the standard output.
                     // This means that it will be redirected to the Process.StandardOutput StreamReader.
                     //procStartInfo.RedirectStandardOutput = false;
@@ -622,14 +635,6 @@ namespace AutoDial
                     System.Diagnostics.Process proc = new System.Diagnostics.Process();
                     proc.StartInfo = procStartInfo;
                     proc.Start();
-
-                    // TalkLogMonitorUtil(string strFilename, Action callback, Regex regExArray)
-                    // Monitor file for changes, provide a callback method to the monitor utility 
-                    // so that the alert sound timer is cancelled if call is answered.
-                    
-                    Regex regEx = new Regex("answered|disconnected");
-                    m_talkLogMonitor = new TalkLogMonitorUtil(programFileLocation, stopAlertTimer, regEx);
-                    m_talkLogMonitor.startMonitoringLogFile();
 
                     bringToFront();
                 }
@@ -650,13 +655,14 @@ namespace AutoDial
         {
             m_logger.Debug("Pattern found in " + strLastLine + " - Alert timer stopped");
             m_timer.Stop();
+            m_talkLogMonitor.stopMonitoringLogFile();
         }
 
         public void playSound()
         {
             
             m_player.Play();
-            m_logger.Debug("Sound {0} played");
+            m_logger.Debug("Sound played");
         }
 
         public void bringToFront()

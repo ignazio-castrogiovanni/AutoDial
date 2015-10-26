@@ -20,7 +20,7 @@ namespace ADTest
             string strTalkPath = @"C:\Users\cati\AppData\Roaming\NCH Software\Program Files\Talk\talk.exe";
            
             string strLogFileExpected = @"C:\Users\cati\AppData\Roaming\NCH Software\Talk\Logs\1983-03-12 Express Talk Log.txt";
-            string strLogFileNameActual = TalkLogMonitorUtil.getTalkLogFileName(dTime, strTalkPath);
+            string strLogFileNameActual = TalkLogMonitorUtil.getTalkLogFileNameFromTalkPath(dTime, strTalkPath);
 
             Assert.AreEqual(strLogFileExpected, strLogFileNameActual);
         }
