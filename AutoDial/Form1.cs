@@ -421,7 +421,10 @@ namespace AutoDial
                                     // Fix Bug when the digit '1' is interpreted as the letter 'l'
                                     rawText = rawText.Replace('l', '1');
 
-                                    m_logger.Trace("Text ('l' to 1): {0}", rawText);
+                                    // Fix Bug when the digit '0' is interpreted as the letter 'O'
+                                    rawText = rawText.Replace('O', '0');
+
+                                    m_logger.Trace("Text ('l' to 1 and 'O' to 0): {0}", rawText);
                                 }
                             }
                         }
@@ -622,8 +625,11 @@ namespace AutoDial
                     // TalkLogMonitorUtil(string strFilename, Action callback, Regex regExArray)
                     // Monitor file for changes, provide a callback method to the monitor utility 
                     // so that the alert sound timer is cancelled if call is answered.
-                    m_talkLogMonitor.startMonitoringLogFile();
-                    m_logger.Info("Talk Log Monitor started");
+                    
+                    // MONITOR - To test better before releasing!!!
+
+                    // m_talkLogMonitor.startMonitoringLogFile();
+                    //m_logger.Info("Talk Log Monitor started");
 
                     // The following commands are needed to redirect the standard output.
                     // This means that it will be redirected to the Process.StandardOutput StreamReader.
