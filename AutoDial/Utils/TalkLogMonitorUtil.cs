@@ -15,6 +15,9 @@ namespace AutoDial.UtilLogMonitor
         private Regex m_regExArr;
         private string m_strFilename;
         FileSystemWatcher m_fileWatcher;
+        
+        // Error handling
+        private string m_strError = null;
 
         // Contructor with callback to call when we find the right log.
         public TalkLogMonitorUtil(string strFilename, Action<string> callback, Regex regExArray)
@@ -24,25 +27,51 @@ namespace AutoDial.UtilLogMonitor
             m_actionToCall = callback;
             m_regExArr = regExArray;
 
-            // Set file watcher
-            m_fileWatcher = new FileSystemWatcher();
-            m_fileWatcher.Path = Path.GetDirectoryName(m_strFilename);
-            m_fileWatcher.Filter = Path.GetFileName(m_strFilename);
-            m_fileWatcher.NotifyFilter = NotifyFilters.LastWrite;
-            m_fileWatcher.Changed += new FileSystemEventHandler(OnChanged);
+            // If file doesn't exist signal an error
+            if (!File.Exists(m_strFilename))
+            {
+                m_strError = "Log File Not Found in: {0}";
+            }
+            else
+            {
+                // Set file watcher
+                m_fileWatcher = new FileSystemWatcher();
+                m_fileWatcher.Path = Path.GetDirectoryName(m_strFilename);
+                m_fileWatcher.Filter = Path.GetFileName(m_strFilename);
+                m_fileWatcher.NotifyFilter = NotifyFilters.LastWrite;
+                m_fileWatcher.Changed += new FileSystemEventHandler(OnChanged);
+            }
         }
 
         
-        public void startMonitoringLogFile()
-        { 
-            // Start monitoring file
-            m_fileWatcher.EnableRaisingEvents = true;
+        public bool startMonitoringLogFile()
+        {
+            if (m_strError != null)
+            {
+                return false;
+            }
+            else
+            {
+                // Start monitoring file
+                m_fileWatcher.EnableRaisingEvents = true;
+                return true;
+            }
         }
 
-        public void stopMonitoringLogFile()
+        public bool stopMonitoringLogFile()
         {
-            // Start monitoring file
-            m_fileWatcher.EnableRaisingEvents = false;
+            if (m_strError != null)
+            {
+                return false;
+            }
+            else
+            {
+                // Start monitoring file
+                m_fileWatcher.EnableRaisingEvents = false;
+                return true;
+            }
+
+           
         }
 
         public void OnChanged(object source, FileSystemEventArgs e)
@@ -139,6 +168,11 @@ namespace AutoDial.UtilLogMonitor
 
                 return strCompleteLogPath;
             
+        }
+
+        public string getError()
+        {
+            return m_strError;
         }
     }
 }

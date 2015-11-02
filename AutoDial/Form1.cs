@@ -472,27 +472,30 @@ namespace AutoDial
                     }
                 }
 
-                Match result = Regex.Match(inputText, @"(\d{10}|\d+ \d+ \d+)", RegexOptions.Multiline);
+                Match result = Regex.Match(inputText, @"(\d{10}| \d+ \d+ \d+)", RegexOptions.Multiline);
 
-                if (result.Success)
+                while (result.Success)
                 {
-                    m_logger.Debug("Found match:" + result.Value);
-                    return cleanNumber(result.Value);
-                }
-
-                else
-                {
-                    m_logger.Error("Unable to find Match");
-                    if (!m_imgManUtils.getSafeMode())
+                    string strCleanedNum = cleanNumber(result.Value);
+                    if(strCleanedNum.Length == 10) 
                     {
-                        m_imgManUtils.setSafeMode(true);
-                        errorPopup("Cant find AUTODIAL", "Enabling Auto Dial Safe Mode.");
+                        m_logger.Debug("Found match:" + result.Value);
+                        return strCleanedNum;
                     }
-                   
-                    errorPopup("Cant find AUTODIAL", "extractPhoneNumber() was unable to find AUTODIAL value");
-
-                    return null;
+                    
+                    result = result.NextMatch();
                 }
+
+                m_logger.Error("Unable to find Match");
+                if (!m_imgManUtils.getSafeMode())
+                {
+                    m_imgManUtils.setSafeMode(true);
+                    errorPopup("Cant find AUTODIAL", "Enabling Auto Dial Safe Mode.");
+                }
+                   
+                errorPopup("Cant find AUTODIAL", "extractPhoneNumber() was unable to find AUTODIAL value");
+
+                return null;   
             }
             else
             {
@@ -506,6 +509,7 @@ namespace AutoDial
         {
             // Just remove spaces. As easy as that.
             inputNumber = Regex.Replace(inputNumber, @"\s+", "");
+            inputNumber = inputNumber.Trim();
             m_logger.Info("Number cleaned: " + inputNumber);
             return inputNumber;
         }
@@ -628,9 +632,15 @@ namespace AutoDial
                     
                     // MONITOR - To test better before releasing!!!
 
-                    // m_talkLogMonitor.startMonitoringLogFile();
-                    //m_logger.Info("Talk Log Monitor started");
-
+                    bool bLogMonitorStarted = m_talkLogMonitor.startMonitoringLogFile();
+                    if (bLogMonitorStarted)
+                    {
+                        m_logger.Info("Talk Log Monitor started");
+                    }
+                    else
+                    {
+                        m_logger.Error("Talk Log Monitor not started. Error: {0}", m_talkLogMonitor.getError());
+                    }
                     // The following commands are needed to redirect the standard output.
                     // This means that it will be redirected to the Process.StandardOutput StreamReader.
                     //procStartInfo.RedirectStandardOutput = false;
