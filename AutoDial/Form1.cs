@@ -25,8 +25,6 @@ namespace AutoDial
 {
     public partial class MainForm : Form
     {
-        
-        private string TESSERACT_DATA_PATH;
         private static Logger m_logger;
         private LogAndErrorsUtils m_logAndErr;
         private ImageManipulationUtils m_imgManUtils;
