@@ -97,6 +97,7 @@
     </Reference>
   </ItemGroup>
   <ItemGroup>
+    <Compile Include="MailUtils.cs" />
     <Compile Include="Utils.cs" />
     <Compile Include="Constants.cs" />
     <Compile Include="Form1.cs">
