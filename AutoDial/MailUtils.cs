@@ -22,8 +22,10 @@ namespace AutoDial.MailUtils
                             string credentialPassword,
                             params MailAttachment[] attachments)
         {
-            string host = ConfigurationManager.AppSettings["SMTPHost"];
-            string port = ConfigurationManager.AppSettings["SMTPort"];
+            // client.Host = "smtp.gmail.com";
+            // client.Port = 587;
+            string host = "smtp.gmail.com"; //ConfigurationManager.AppSettings["SMTPHost"];
+            int nPort = 587; //ConfigurationManager.AppSettings["SMTPort"];
             try
             {
                 MailMessage mail = new MailMessage();
@@ -34,15 +36,19 @@ namespace AutoDial.MailUtils
                 mail.Subject = subject;
                 mail.SubjectEncoding = Encoding.UTF8;
                 mail.Priority = MailPriority.Normal;
-                foreach (MailAttachment ma in attachments)
-                {
-                    mail.Attachments.Add(ma.File);
-                }
+                //foreach (MailAttachment ma in attachments)
+                //{
+                //    mail.Attachments.Add(ma.File);
+                //}
                 SmtpClient smtp = new SmtpClient();
-                smtp.Credentials = new System.Net.NetworkCredential(credentialUser, credentialPassword);
+                
                 smtp.Host = host;
-                smtp.Port = Int32.Parse(port);
+                //smtp.Port = Int32.Parse(port);
+                smtp.Port = nPort;
                 smtp.EnableSsl = true;
+                smtp.DeliveryMethod = SmtpDeliveryMethod.Network;
+                smtp.UseDefaultCredentials = false;
+                smtp.Credentials = new System.Net.NetworkCredential(credentialUser, credentialPassword);
                 smtp.Send(mail);
             }
             catch (Exception ex)
@@ -59,6 +65,55 @@ namespace AutoDial.MailUtils
 
                 Logger logger = LogManager.GetCurrentClassLogger();
                 logger.Error("Exception: " + ex.ToString() + " mail: " + sb.ToString());
+            }
+        }
+
+        public static string sendit(string ReceiverMail, string subject, string body, string filename = null)
+        {
+            MailMessage msg = new MailMessage();
+
+            msg.From = new MailAddress("akton29@gmail.com");
+            msg.To.Add(ReceiverMail);
+            msg.Subject = "Auto Dial Log - " + subject;
+            msg.Body = DateTime.Now.ToString() + '\n' + body;
+
+            if (filename != null)
+            {
+                Attachment attachment = new Attachment(filename, MediaTypeNames.Application.Octet);
+                ContentDisposition disposition = attachment.ContentDisposition;
+                disposition.CreationDate = File.GetCreationTime(filename);
+                disposition.ModificationDate = File.GetLastWriteTime(filename);
+                disposition.ReadDate = File.GetLastAccessTime(filename);
+                disposition.FileName = Path.GetFileName(filename);
+                disposition.Size = new FileInfo(filename).Length;
+                disposition.DispositionType = DispositionTypeNames.Attachment;
+                msg.Attachments.Add(attachment);
+            }
+
+            SmtpClient client = new SmtpClient();
+            client.Host = "smtp.gmail.com";
+            client.Port = 587;
+
+            client.EnableSsl = true;
+            client.DeliveryMethod = SmtpDeliveryMethod.Network;
+            client.UseDefaultCredentials = false;
+            client.Credentials = new System.Net.NetworkCredential("autodial.log@gmail.com", "270McNair");
+            client.Timeout = 20000;
+
+
+
+            try
+            {
+                client.Send(msg);
+                return "Mail has been successfully sent!";
+            }
+            catch (Exception ex)
+            {
+                return "Fail Has error" + ex.Message;
+            }
+            finally
+            {
+                msg.Dispose();
             }
         }
     
@@ -98,4 +153,8 @@ namespace AutoDial.MailUtils
 
 
     }
+
+
+
+
 }

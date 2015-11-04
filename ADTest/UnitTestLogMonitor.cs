@@ -12,7 +12,6 @@ namespace ADTest
         [TestMethod]
         public void TestGetLogFile()
         {
-        //  http://stackoverflow.com/questions/721714/notification-when-a-file-changes
             Regex regEx = new Regex("");
             TalkLogMonitorUtil monUtil = new TalkLogMonitorUtil("", null, regEx); // We don't require any of the parameters to test this method
 

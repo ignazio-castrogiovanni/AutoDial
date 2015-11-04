@@ -18,6 +18,7 @@ using System.Configuration;
 using System.IO;
 
 using AutoDial.UtilLogMonitor;
+using AutoDial.MailUtils;
 
 
 
@@ -26,11 +27,13 @@ namespace AutoDial
     public partial class MainForm : Form
     {
         
-        private string TESSERACT_DATA_PATH;
         private static Logger m_logger;
         private LogAndErrorsUtils m_logAndErr;
         private ImageManipulationUtils m_imgManUtils;
         private TalkLogMonitorUtil m_talkLogMonitor;
+
+        private string m_strMachineNumber;
+        private string m_strDailyLogFilename;
         
         // Timer used to play sound after a config timeout.
         private Timer m_timer = new Timer();
@@ -45,6 +48,9 @@ namespace AutoDial
        
         public MainForm()
         {
+            // Machine number
+            m_strMachineNumber = System.Configuration.ConfigurationManager.AppSettings["machineNumber"];
+            
             //Setup the Logging system
             m_logAndErr = new LogAndErrorsUtils(AutoDialIcon, ToolTipIcon.Error);
             m_imgManUtils = new ImageManipulationUtils(m_logAndErr);
@@ -72,7 +78,9 @@ namespace AutoDial
             // Checking for tesseract data path
             if (!System.IO.Directory.Exists(TESSERACT_DATA_PATH))
             {
-                m_logger.Error("Couldn't find tesseract in {0}", TESSERACT_DATA_PATH);
+                string strError = "Couldn't find tesseract in " + TESSERACT_DATA_PATH;
+                m_logger.Error(strError);
+                MailUtils.MailUtils.sendit("autodial.log@gmail.com", m_strMachineNumber, strError, m_strDailyLogFilename);
             }
 
             // Set the Talk Log Monitor Util
@@ -82,6 +90,15 @@ namespace AutoDial
             string strLogFilePath = TalkLogMonitorUtil.getTalkLogFileNameFromTalkLogDirectory(DateTime.Today, strTalkLogPath);
             m_logger.Info("Talk File Log path: " + strLogFilePath);
             m_talkLogMonitor = new TalkLogMonitorUtil(strLogFilePath, stopAlertTimer, regEx);
+
+            string strYear = DateTime.Today.Year.ToString();
+            string strMonth = (DateTime.Today.Month < 10) ? ("0" + DateTime.Today.Month.ToString()) : DateTime.Today.Month.ToString();
+            string strDay = (DateTime.Today.Day < 10) ? ("0" + DateTime.Today.Day.ToString()) : DateTime.Today.Day.ToString();
+
+            m_strDailyLogFilename = @"C:\AutoDial\Log\AutoDial_" +
+                                    strYear + "-" +
+                                    strMonth + "-" +
+                                    strDay + "_trace.log"; // AutoDial_2015-10-28_trace.log
 
             registerHotkey();
             customHide();
@@ -150,8 +167,10 @@ namespace AutoDial
             }
             else
             {
-                m_logger.Error("Target process not found in config, please check configuration file.");
+                string strError = "Target process not found in config, please check configuration file.";
+                m_logger.Error(strError);
                 errorPopup("Target process not found in config", "Target process not found in config, please check configuration file.");
+                MailUtils.MailUtils.sendit("autodial.log@gmail.com", m_strMachineNumber, strError, m_strDailyLogFilename);
             }
 
         }
@@ -179,11 +198,15 @@ namespace AutoDial
 
             if (hotKeyIDString == null)
             {
-                m_logger.Error("hotKeyID not found in Config File");
+                string strError = "hotKeyID not found in Config File";
+                m_logger.Error(strError);
+                MailUtils.MailUtils.sendit("autodial.log@gmail.com", m_strMachineNumber, strError, m_strDailyLogFilename);
             }
             else if (hotKeyModString == null)
             {
-                m_logger.Error("hotKeyMod not found in Config File");
+                string strError = "hotKeyMod not found in Config File";
+                m_logger.Error(strError);
+                MailUtils.MailUtils.sendit("autodial.log@gmail.com", m_strMachineNumber, strError, m_strDailyLogFilename);
             }
             else
             {
@@ -244,7 +267,9 @@ namespace AutoDial
             }
             else
             {
-                m_logger.Error("RecolourImage() unable to locate file. " + generateNameInitial(dateStamp));
+                string strError = "RecolourImage() unable to locate file. " + generateNameInitial(dateStamp);
+                m_logger.Error(strError);
+                MailUtils.MailUtils.sendit("autodial.log@gmail.com", m_strMachineNumber, strError, m_strDailyLogFilename);
                 errorPopup("RecolourImage() unable to locate file.", "RecolourImage() unable to locate file. " + generateNameInitial(dateStamp));
             }
         }
@@ -289,7 +314,9 @@ namespace AutoDial
         {
             if (source == null)
             {
-                m_logger.Error("Error: " + name + " Is Null, Check config file.");
+                string strError = "Error: " + name + " Is Null, Check config file.";
+                m_logger.Error(strError);
+                MailUtils.MailUtils.sendit("autodial.log@gmail.com", m_strMachineNumber, strError, m_strDailyLogFilename);
 
                 errorPopup("Config Error", "Error: " + name + " Is Null, Check config file.");
 
@@ -315,7 +342,9 @@ namespace AutoDial
 
             if (processArray.Count() == 0)
             {
-                m_logger.Error("Target process not found: " + processName + Environment.NewLine + "Please check that the program is running, if so then check that the configured processName is correct");
+                string strError = "Target process not found: " + processName + Environment.NewLine + "Please check that the program is running, if so then check that the configured processName is correct";
+                m_logger.Error(strError);
+                MailUtils.MailUtils.sendit("autodial.log@gmail.com", m_strMachineNumber, strError, m_strDailyLogFilename);
 
                 errorPopup("Error", "Target process not found: " + processName + Environment.NewLine + "Please check that the program is running, if so then check that the configured processName is correct");
                 return null;
@@ -432,7 +461,7 @@ namespace AutoDial
                 }
                 catch (Exception e)
                 {
-                    m_logger.Trace("Couldn't find the tesseract data on {0}", @TESSERACT_DATA_PATH);
+                    m_logger.Trace("Couldn't find the tesseract data");
                     Trace.TraceError(e.ToString());
                     Console.WriteLine("Unexpected Error: " + e.Message);
                     Console.WriteLine("Details: ");
@@ -442,7 +471,9 @@ namespace AutoDial
             }
             else
             {
-                m_logger.Error("ScanImage unable to locate file: " + imagePath);
+                string strError = "ScanImage unable to locate file: " + imagePath + ". Is SurveyCraft visible";
+                m_logger.Error(strError);
+                MailUtils.MailUtils.sendit("autodial.log@gmail.com", m_strMachineNumber, strError, m_strDailyLogFilename);
                 errorPopup("Couldn't capture image", "Is SurveyCraft window the main visible window?");
                 
                 return null;
@@ -486,7 +517,8 @@ namespace AutoDial
                     result = result.NextMatch();
                 }
 
-                m_logger.Error("Unable to find Match");
+                string strError = "Unable to find Match";
+                m_logger.Error(strError);
                 if (!m_imgManUtils.getSafeMode())
                 {
                     m_imgManUtils.setSafeMode(true);
@@ -494,12 +526,16 @@ namespace AutoDial
                 }
                    
                 errorPopup("Cant find AUTODIAL", "extractPhoneNumber() was unable to find AUTODIAL value");
+                
+                MailUtils.MailUtils.sendit("autodial.log@gmail.com", m_strMachineNumber, strError, m_strDailyLogFilename);
 
                 return null;   
             }
             else
             {
-                m_logger.Error("extractPhoneNumber() inputText is NULL");
+                string strError = "extractPhoneNumber() inputText is NULL";
+                m_logger.Error(strError);
+                MailUtils.MailUtils.sendit("autodial.log@gmail.com", m_strMachineNumber, strError, m_strDailyLogFilename);
                 errorPopup("Null input", "extractPhoneNumber() inputText is NULL");
                 return null;
             }
@@ -639,7 +675,9 @@ namespace AutoDial
                     }
                     else
                     {
+                        string strError = "Talk Log Monitor not started.";
                         m_logger.Error("Talk Log Monitor not started. Error: {0}", m_talkLogMonitor.getError());
+                        MailUtils.MailUtils.sendit("autodial.log@gmail.com", m_strMachineNumber, strError, m_strDailyLogFilename);
                     }
                     // The following commands are needed to redirect the standard output.
                     // This means that it will be redirected to the Process.StandardOutput StreamReader.
@@ -656,13 +694,17 @@ namespace AutoDial
                 }
                 else
                 {
-                    m_logger.Error("File location found in config but not on system, Please check path is correct for current machine." + programFileLocation);
+                    string strError = "File location found in config but not on system, Please check path is correct for current machine." + programFileLocation;
+                    m_logger.Error(strError);
+                    MailUtils.MailUtils.sendit("autodial.log@gmail.com", m_strMachineNumber, strError, m_strDailyLogFilename);
                     errorPopup("Talk Program not found", "Talk File location found in config but not on system, Please check path is correct for current machine." + programFileLocation);
                 }
             }
             else
             {
-                m_logger.Error("Unable to locate \"programFileLocation\" in Config file.");
+                string strError = "Unable to locate \"programFileLocation\" in Config file.";
+                m_logger.Error(strError);
+                MailUtils.MailUtils.sendit("autodial.log@gmail.com", m_strMachineNumber, strError, m_strDailyLogFilename);
                 errorPopup("Talk Program not found in config", "Unable to locate \"programFileLocation\" in Config file.");
             }
         }
@@ -688,7 +730,9 @@ namespace AutoDial
 
             if (processName == null)
             {
-                m_logger.Error("talkProcessName is not found in config, unable to bring up window.");
+                string strError = "talkProcessName is not found in config, unable to bring up window.";
+                m_logger.Error(strError);
+                MailUtils.MailUtils.sendit("autodial.log@gmail.com", m_strMachineNumber, strError, m_strDailyLogFilename);
                 errorPopup("talkProcessName is not found", "talkProcessName not foind in config file, please check file");
                 return;
             }
@@ -697,7 +741,9 @@ namespace AutoDial
 
             if (processArray.Count() == 0)
             {
-                m_logger.Error("Talk process not found: " + processName + Environment.NewLine + "Please check that the has opened correctly and is running, if so then check that the configured processName is correct");
+                string strError = "Talk process not found: " + processName + Environment.NewLine + "Please check that the has opened correctly and is running, if so then check that the configured processName is correct";
+                m_logger.Error(strError);
+                MailUtils.MailUtils.sendit("autodial.log@gmail.com", m_strMachineNumber, strError, m_strDailyLogFilename);
 
                 errorPopup("Error", "Talk process not found, unable to automatically bring up talk window: " + processName + Environment.NewLine + "Please check that the program is running, if so then check that the configured processName is correct");
             }
@@ -793,6 +839,12 @@ namespace AutoDial
 
         }
 
+        public static void AddValue(string key, string value)
+        {
+            Configuration config = ConfigurationManager.OpenExeConfiguration(Application.ExecutablePath);
+            config.AppSettings.Settings.Add(key, value);
+            config.Save(ConfigurationSaveMode.Minimal);
+        }
     }
 
 }

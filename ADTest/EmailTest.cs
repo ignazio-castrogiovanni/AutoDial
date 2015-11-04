@@ -10,14 +10,7 @@ namespace ADTest
         [TestMethod]
         public void TestMethod1()
         {
-            MailUtils.Email("akton29@gmail.com",
-                "Test AutoDial Body",
-                "Test AutoDial Subject",
-                "autodial.log@gmail.com",
-                "Auto Dial Log",
-                "autodial.log@gmail.com",
-                "270McNair",
-                null);
+            MailUtils.sendit("autodial.log@gmail.com", "Machine 17", "Problem found", @"C:\AUTODIAL\log\AutoDial_2015-10-28_trace.log");
         }
     }
 }
